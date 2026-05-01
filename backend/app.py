@@ -15,6 +15,69 @@ CORS(app, resources={r"/*": {"origins": Config.CORS_ORIGINS}})
 
 app.after_request(secure_headers)
 
+# 简单的内存速率限制器
+class RateLimiter:
+    """基于内存的简单速率限制器"""
+    def __init__(self, max_requests=100, window_seconds=60):
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self.requests = {}
+
+    def is_allowed(self, key):
+        """检查请求是否允许"""
+        import time
+        now = time.time()
+
+        if key not in self.requests:
+            self.requests[key] = []
+
+        # 清理过期的请求记录
+        self.requests[key] = [t for t in self.requests[key] if now - t < self.window_seconds]
+
+        if len(self.requests[key]) >= self.max_requests:
+            return False
+
+        self.requests[key].append(now)
+        return True
+
+    def cleanup(self):
+        """清理过期的请求记录"""
+        import time
+        now = time.time()
+        expired_keys = []
+        for key, timestamps in self.requests.items():
+            self.requests[key] = [t for t in timestamps if now - t < self.window_seconds]
+            if not self.requests[key]:
+                expired_keys.append(key)
+        for key in expired_keys:
+            del self.requests[key]
+
+
+# 全局速率限制器实例
+# 登录接口：5次/分钟
+login_limiter = RateLimiter(max_requests=5, window_seconds=60)
+# 通用API：100次/分钟
+api_limiter = RateLimiter(max_requests=100, window_seconds=60)
+
+
+def rate_limit(limiter):
+    """速率限制装饰器"""
+    from functools import wraps
+    from flask import request
+
+    def decorator(f):
+        @wraps(f)
+        def wrapped(*args, **kwargs):
+            client_ip = request.remote_addr or 'unknown'
+            if not limiter.is_allowed(client_ip):
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Rate limit exceeded. Please try again later.'
+                }), 429
+            return f(*args, **kwargs)
+        return wrapped
+    return decorator
+
 try:
     from modules.terminal_manager import init_socketio
     socketio = init_socketio(app)

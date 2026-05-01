@@ -1,5 +1,6 @@
 import os
 import json
+import secrets
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -7,6 +8,11 @@ load_dotenv()
 
 # 获取配置文件路径
 CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'config.json')
+
+
+def _generate_secret_key():
+    """生成安全的随机密钥"""
+    return secrets.token_hex(32)
 
 class Config:
     def __init__(self):
@@ -37,13 +43,16 @@ class Config:
     def _get_default_config(self):
         """获取默认配置"""
         base_dir = os.path.dirname(os.path.dirname(__file__))
+        # 优先从环境变量读取密钥，否则生成随机密钥
+        env_secret = os.environ.get('XIAOPENG_SECRET_KEY')
+        secret_key = env_secret if env_secret else _generate_secret_key()
         return {
             "server": {
                 "port": 5000,
                 "host": "0.0.0.0"
             },
             "security": {
-                "secret_key": "dev-secret-key",
+                "secret_key": secret_key,
                 "debug": True,
                 "ip_whitelist_enabled": True,
                 "ip_whitelist": {
@@ -430,6 +439,7 @@ class StaticConfig:
     FILE_MANAGER_ONLINE_EDIT_VERSION_CONTROL_ENABLED = config_instance.FILE_MANAGER_ONLINE_EDIT_VERSION_CONTROL_ENABLED
     FILE_MANAGER_ONLINE_EDIT_VERSION_CONTROL_MAX_VERSIONS = config_instance.FILE_MANAGER_ONLINE_EDIT_VERSION_CONTROL_MAX_VERSIONS
 
-# 保持向后兼容 - 提供 Config 别名指向 StaticConfig
+# 保持向后兼容 - 提供 AppConfig 别名指向 StaticConfig
 # 注意：原始 Config 类仍然可以通过 type(config_instance) 获取
-Config = StaticConfig
+# 避免覆盖原始 Config 类，使用新的名称 AppConfig
+AppConfig = StaticConfig

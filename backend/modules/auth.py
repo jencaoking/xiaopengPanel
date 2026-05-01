@@ -94,6 +94,30 @@ login_attempts = {}
 MAX_LOGIN_ATTEMPTS = 5
 LOCKOUT_TIME = 300  # 5分钟
 
+
+def _cleanup_old_login_attempts():
+    """清理过期的登录尝试记录，防止内存泄漏"""
+    now = time.time()
+    expired_users = []
+    for username, (attempts, last_attempt) in login_attempts.items():
+        if now - last_attempt > LOCKOUT_TIME * 2:
+            expired_users.append(username)
+    for username in expired_users:
+        del login_attempts[username]
+
+
+def _schedule_cleanup():
+    """定期清理登录尝试记录"""
+    _cleanup_old_login_attempts()
+    # 每5分钟清理一次
+    timer = threading.Timer(300, _schedule_cleanup)
+    timer.daemon = True
+    timer.start()
+
+
+# 启动定期清理
+_schedule_cleanup()
+
 # 登录函数
 def login(data):
     username = data.get('username')

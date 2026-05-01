@@ -140,15 +140,14 @@ class MetricsCollector:
     
     def _save_to_db(self, metrics, timestamp):
         try:
-            conn = sqlite3.connect(HISTORY_DB_PATH)
-            cursor = conn.cursor()
-            for metric_type, metric_value in metrics.items():
-                cursor.execute('''
-                    INSERT INTO metrics_history (timestamp, metric_type, metric_value, granularity)
-                    VALUES (?, ?, ?, 'minute')
-                ''', (timestamp, metric_type, metric_value))
-            conn.commit()
-            conn.close()
+            with sqlite3.connect(HISTORY_DB_PATH) as conn:
+                cursor = conn.cursor()
+                for metric_type, metric_value in metrics.items():
+                    cursor.execute('''
+                        INSERT INTO metrics_history (timestamp, metric_type, metric_value, granularity)
+                        VALUES (?, ?, ?, 'minute')
+                    ''', (timestamp, metric_type, metric_value))
+                conn.commit()
         except Exception as e:
             print(f"Failed to save metrics to DB: {e}")
     

@@ -190,16 +190,28 @@ def delete_file(file_path, username=''):
         return {'status': 'error', 'message': str(e)}
 
 
+# 文件读取大小限制 (10MB)
+MAX_FILE_READ_SIZE = 10 * 1024 * 1024
+
+
 def read_file(file_path):
     """读取文件内容"""
     # 验证路径是否在白名单中
     if not is_path_in_whitelist(file_path):
         return {'status': 'error', 'message': '访问未授权路径'}
-    
+
     try:
+        # 检查文件大小
+        file_size = os.path.getsize(file_path)
+        if file_size > MAX_FILE_READ_SIZE:
+            return {
+                'status': 'error',
+                'message': f'文件过大 ({file_size} 字节)，超过限制 ({MAX_FILE_READ_SIZE} 字节)'
+            }
+
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
-        
+
         return {'status': 'success', 'content': content}
     except Exception as e:
         return {'status': 'error', 'message': str(e)}

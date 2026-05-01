@@ -111,25 +111,14 @@ def manage_process(pid, action):
                 'message': f'Process {pid} killed successfully'
             }
         elif action == 'restart':
-            # 保存进程信息
-            process_info = process.as_dict(attrs=['name', 'cmdline'])
-            
-            # 终止进程
-            process.terminate()
-            process.wait(timeout=5)
-            
-            # 重启进程
-            if platform.system() == 'Windows':
-                # Windows系统使用subprocess
-                import subprocess
-                subprocess.Popen(process_info['cmdline'])
-            else:
-                # Linux系统使用os.execvp
-                os.execvp(process_info['name'], process_info['cmdline'])
-            
+            # 安全警告：通过API重启任意进程存在严重风险
+            # 1. os.execvp 会替换当前进程内存空间（Flask主进程将被替换）
+            # 2. cmdline 可能被恶意进程篡改，导致执行任意命令
+            # 3. 进程终止超时后可能仍然存在
+            # 因此，此功能已被禁用，请使用服务管理功能代替
             return {
-                'status': 'success',
-                'message': f'Process {pid} restarted successfully'
+                'status': 'error',
+                'message': 'Process restart is not supported via API for security reasons. Please use service management instead.'
             }
         else:
             return {

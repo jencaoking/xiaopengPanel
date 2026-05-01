@@ -689,19 +689,39 @@ class DatabaseManager:
             log_system(f"Failed to get permissions for {username} on {db_name} for {config_id}: {str(e)}", level='ERROR', name='db_manager')
             return {'status': 'error', 'message': f'Failed to get user permissions: {str(e)}'}
     
+    def _validate_db_identifier(self, identifier: str) -> bool:
+        """验证数据库标识符是否安全（只允许字母、数字、下划线）"""
+        import re
+        return bool(re.match(r'^[a-zA-Z0-9_]+$', identifier))
+
     def _get_mysql_user_permissions(self, config: Dict, username: str, db_name: str) -> Dict:
         """Get MySQL user permissions"""
-        query = f"SHOW GRANTS FOR '{username}'@'%' ON {db_name}.*"
+        # 验证输入参数
+        if not self._validate_db_identifier(username):
+            return {'status': 'error', 'message': 'Invalid username format'}
+        if not self._validate_db_identifier(db_name):
+            return {'status': 'error', 'message': 'Invalid database name format'}
+
+        query = f"SHOW GRANTS FOR '{username}'@'%' ON `{db_name}`.*"
         result = self._execute_mysql_query(config, query, None)
         if result['status'] == 'success':
             grants = [list(row.values())[0] for row in result['results']]
             return {'status': 'success', 'grants': grants}
         return result
-    
+
     def _get_postgresql_user_permissions(self, config: Dict, username: str, db_name: str) -> Dict:
         """Get PostgreSQL user permissions"""
-        query = f"SELECT table_name, privilege_type FROM information_schema.role_table_grants WHERE grantee = '{username}' AND table_schema = 'public'"
-        result = self._execute_postgresql_query(config, query, db_name)
+        # 验证输入参数
+        if not self._validate_db_identifier(username):
+            return {'status': 'error', 'message': 'Invalid username format'}
+
+        # PostgreSQL: 使用参数化查询获取权限
+        query = """
+            SELECT table_name, privilege_type
+            FROM information_schema.role_table_grants
+            WHERE grantee = %s AND table_schema = 'public'
+        """
+        result = self._execute_postgresql_query(config, query, db_name, params=(username,))
         if result['status'] == 'success':
             permissions = []
             for row in result['results']:

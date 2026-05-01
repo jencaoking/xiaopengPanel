@@ -11,6 +11,7 @@ import pty
 import fcntl
 import errno
 import signal
+import re
 from datetime import datetime
 from flask import request, jsonify
 from flask_socketio import SocketIO, emit
@@ -18,17 +19,34 @@ from flask_socketio import SocketIO, emit
 TERMINAL_SESSIONS = {}
 COMMAND_HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'command_history.json')
 
+# 允许的shell白名单
+ALLOWED_SHELLS = {'/bin/bash', '/bin/sh', '/bin/zsh', '/usr/bin/bash', '/usr/bin/sh', '/usr/bin/zsh'}
+
 socketio = None
+
+
+def _verify_terminal_token(token):
+    """验证终端连接的JWT令牌"""
+    if not token:
+        return None
+    try:
+        import jwt
+        from config.config import Config
+        payload = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+        return payload
+    except Exception:
+        return None
+
 
 def init_socketio(app):
     global socketio
-    socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
-    
+    from config.config import Config
+    socketio = SocketIO(app, cors_allowed_origins=Config.CORS_ORIGINS, async_mode='threading')
+
     @socketio.on('connect', namespace='/terminal')
     def handle_connect():
-        from flask_login import current_user
         print(f"Client connected: {request.sid}")
-    
+
     @socketio.on('disconnect', namespace='/terminal')
     def handle_disconnect():
         session_id = request.sid
@@ -41,7 +59,7 @@ def init_socketio(app):
                     pass
             del TERMINAL_SESSIONS[session_id]
         print(f"Client disconnected: {session_id}")
-    
+
     @socketio.on('terminal_input', namespace='/terminal')
     def handle_terminal_input(data):
         session_id = request.sid
@@ -53,7 +71,7 @@ def init_socketio(app):
                 except OSError as e:
                     if e.errno != errno.EIO:
                         raise
-    
+
     @socketio.on('terminal_resize', namespace='/terminal')
     def handle_terminal_resize(data):
         session_id = request.sid
@@ -62,16 +80,38 @@ def init_socketio(app):
             if session.get('fd') is not None:
                 winsize = struct.pack('HHHH', data.get('rows', 24), data.get('cols', 80), 0, 0)
                 fcntl.ioctl(session['fd'], termios.TIOCSWINSZ, winsize)
-    
+
     @socketio.on('create_session', namespace='/terminal')
     def handle_create_session(data):
         session_id = request.sid
+
+        # 验证JWT令牌
+        token = data.get('token')
+        user_payload = _verify_terminal_token(token)
+        if not user_payload:
+            emit('error', {'message': 'Unauthorized: Invalid or missing token'}, namespace='/terminal')
+            return
+
         rows = data.get('rows', 24)
         cols = data.get('cols', 80)
         shell = data.get('shell', '/bin/bash')
-        
-        pid, fd = pty.fork()
-        
+
+        # 验证shell是否在白名单中
+        if shell not in ALLOWED_SHELLS:
+            emit('error', {'message': f'Unauthorized shell: {shell}'}, namespace='/terminal')
+            return
+
+        # 验证shell路径格式
+        if not re.match(r'^/[a-zA-Z0-9_./-]+$', shell):
+            emit('error', {'message': 'Invalid shell path'}, namespace='/terminal')
+            return
+
+        try:
+            pid, fd = pty.fork()
+        except Exception as e:
+            emit('error', {'message': f'Failed to create terminal session: {str(e)}'}, namespace='/terminal')
+            return
+
         if pid == 0:
             os.environ['TERM'] = 'xterm-256color'
             os.environ['COLORTERM'] = 'truecolor'
@@ -79,15 +119,16 @@ def init_socketio(app):
         else:
             winsize = struct.pack('HHHH', rows, cols, 0, 0)
             fcntl.ioctl(fd, termios.TIOCSWINSZ, winsize)
-            
+
             TERMINAL_SESSIONS[session_id] = {
                 'fd': fd,
                 'process': None,
                 'pid': pid,
                 'created_at': datetime.now().isoformat(),
-                'shell': shell
+                'shell': shell,
+                'user': user_payload.get('username', 'unknown')
             }
-            
+
             def read_output():
                 while session_id in TERMINAL_SESSIONS:
                     try:
@@ -101,14 +142,14 @@ def init_socketio(app):
                     except Exception as e:
                         print(f"Read error: {e}")
                         break
-                
+
                 emit('session_closed', {}, namespace='/terminal')
-            
+
             thread = threading.Thread(target=read_output, daemon=True)
             thread.start()
-            
+
             emit('session_created', {'session_id': session_id}, namespace='/terminal')
-    
+
     return socketio
 
 def get_socketio():

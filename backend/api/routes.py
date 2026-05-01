@@ -25,6 +25,14 @@ api = Blueprint('api', __name__)
 # 认证路由
 @api.route('/login', methods=['POST'])
 def login_route():
+    # 应用速率限制
+    from app import login_limiter
+    client_ip = request.remote_addr or 'unknown'
+    if not login_limiter.is_allowed(client_ip):
+        return jsonify({
+            'status': 'error',
+            'message': 'Rate limit exceeded. Please try again later.'
+        }), 429
     return login(request.json)
 
 # 刷新令牌路由
