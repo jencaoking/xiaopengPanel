@@ -1,0 +1,73 @@
+# 字节编译文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+
+# Python 发行版
+dist/
+build/
+*.egg
+*.egg-info/
+*.egg
+
+# 虚拟环境
+.venv/
+venv/
+ENV/
+env/
+
+# Node.js
+node_modules/
+frontend-vue/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+frontend-vue/dist/
+
+# 配置文件
+config/config.json
+config/users.json
+
+# 运行数据
+backend/data/*.db
+backend/data/*.json
+logs/
+
+# IDE 配置
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# 操作系统
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# 环境文件
+.env
+.env.local
+.env.*.local
+
+# 密码脚本
+update_password.py
+update_password_simple.py
+
+# 临时文件
+*.tmp
+*.temp
+*.log
+
+# Trae AI
+.trae/
+
+# 重构计划文档
+REWRITE_PLAN.md
+FUNCTION_ANALYSIS.md
