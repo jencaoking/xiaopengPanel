@@ -19,6 +19,9 @@ from flask_socketio import SocketIO, emit
 TERMINAL_SESSIONS = {}
 COMMAND_HISTORY_FILE = os.path.join(os.path.dirname(__file__), '..', 'data', 'command_history.json')
 
+# 确保数据目录存在
+os.makedirs(os.path.dirname(COMMAND_HISTORY_FILE), exist_ok=True)
+
 # 允许的shell白名单
 ALLOWED_SHELLS = {'/bin/bash', '/bin/sh', '/bin/zsh', '/usr/bin/bash', '/usr/bin/sh', '/usr/bin/zsh'}
 
