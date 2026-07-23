@@ -641,6 +641,36 @@
   font-style: italic;
 }
 
+/* Sticky table header for long lists */
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--ios-fill-tertiary);
+}
+
+/* Horizontal scroll hint shadow */
+.table-container {
+  position: relative;
+}
+
+.table-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 24px;
+  background: linear-gradient(to right, transparent, var(--ios-card-bg));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--ios-transition-fast);
+}
+
+.table-container.has-scroll::after {
+  opacity: 1;
+}
+
 /* ========================================
    Responsive Design
    ======================================== */
@@ -662,10 +692,13 @@
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: var(--ios-space-3);
   }
 
+  /* Search input becomes fluid on mobile instead of fixed width */
   .search-box input {
-    width: 240px;
+    width: 100%;
+    min-width: 0;
   }
 
   .login-box {
@@ -677,13 +710,52 @@
     grid-template-columns: 1fr;
   }
 
+  /* Batch actions: keep horizontal row but allow wrapping */
   .batch-actions {
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     width: 100%;
+    gap: var(--ios-space-2);
   }
 
-  .btn {
-    width: 100%;
+  .batch-actions .btn {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* Page header stacks vertically on mobile */
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--ios-space-3);
+  }
+
+  .page-header h2 {
+    font-size: var(--ios-text-title2);
+  }
+
+  /* Section heading slightly smaller */
+  .section h2 {
+    font-size: var(--ios-text-title3);
+  }
+
+  /* Tighter card padding on mobile */
+  .card,
+  .system-info,
+  .stat-card {
+    padding: var(--ios-space-4);
+    margin-bottom: var(--ios-space-4);
+  }
+
+  /* Form groups tighter on mobile */
+  .form-group {
+    margin-bottom: var(--ios-space-4);
+  }
+
+  /* Table cells more compact on mobile */
+  .data-table th,
+  .data-table td {
+    padding: var(--ios-space-3) var(--ios-space-4);
   }
 }
 
@@ -692,9 +764,11 @@
     grid-template-columns: 1fr;
   }
 
+  /* Search box becomes full-width column on very small screens */
   .search-box {
     flex-direction: column;
     width: 100%;
+    align-items: stretch;
   }
 
   .search-box input {
@@ -703,18 +777,28 @@
 
   .login-box {
     padding: var(--ios-space-6);
-    margin: var(--ios-space-4);
+    margin: var(--ios-space-3);
+    border-radius: var(--ios-radius-2xl);
   }
 
-  .system-info {
-    padding: var(--ios-space-4);
-  }
-
-  .stat-card {
-    padding: var(--ios-space-4);
+  .system-info,
+  .stat-card,
+  .card {
+    padding: var(--ios-space-3);
   }
 
   .stat-value {
     font-size: var(--ios-text-large-title);
+  }
+
+  /* Tables: tighten horizontal padding for more content space */
+  .data-table th,
+  .data-table td {
+    padding: var(--ios-space-2) var(--ios-space-3);
+    font-size: var(--ios-text-caption1);
+  }
+
+  .data-table th {
+    font-size: var(--ios-text-caption2);
   }
 }

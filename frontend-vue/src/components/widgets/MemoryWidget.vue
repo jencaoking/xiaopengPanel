@@ -74,7 +74,7 @@ export default {
     })
     
     const formatBytes = (bytes) => {
-      if (bytes === 0) return '0 B'
+      if (!bytes || bytes <= 0) return '0 B'
       const k = 1024
       const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
       const i = Math.floor(Math.log(bytes) / Math.log(k))
@@ -213,7 +213,7 @@ export default {
   transition: width 0.3s ease;
 }
 
-.bar-fill.normal { background: linear-gradient(90deg, var(--success-500), var(--success-400)); }
-.bar-fill.warning { background: linear-gradient(90deg, var(--warning-500), var(--warning-400)); }
-.bar-fill.danger { background: linear-gradient(90deg, var(--danger-500), var(--danger-400)); }
+.bar-fill.normal { background: linear-gradient(90deg, var(--ios-green), var(--ios-teal)); }
+.bar-fill.warning { background: linear-gradient(90deg, var(--ios-orange), var(--ios-yellow)); }
+.bar-fill.danger { background: linear-gradient(90deg, var(--ios-red), var(--ios-pink)); }
 </style>

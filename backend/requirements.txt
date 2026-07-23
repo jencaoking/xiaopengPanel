@@ -5,3 +5,10 @@ python-dotenv>=1.0.0
 psutil>=5.9.0
 PyJWT>=2.8.0
 bcrypt>=4.1.0
+pyotp>=2.9.0
+qrcode>=7.4.0
+# 可选：NVIDIA GPU 监控（未安装或无 GPU 时自动降级，不影响运行）
+pynvml>=11.5.0
+croniter>=1.4.0
+# AI 助手：HTTP 客户端（调用云端 LLM API，缺省时回退到 urllib）
+requests>=2.31.0

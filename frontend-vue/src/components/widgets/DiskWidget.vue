@@ -1,17 +1,17 @@
 <template>
   <div class="disk-widget">
     <div class="disk-list">
-      <div v-for="disk in disks" :key="disk.device" class="disk-item">
+      <div v-for="disk in disks" :key="disk.device || disk.mountpoint" class="disk-item">
         <div class="disk-header">
           <span class="disk-name">{{ disk.mountpoint }}</span>
-          <span class="disk-percent" :class="getUsageClass(disk.usage_percent)">{{ disk.usage_percent.toFixed(1) }}%</span>
+          <span class="disk-percent" :class="getUsageClass(disk.usage_percent)">{{ (disk.usage_percent || 0).toFixed(1) }}%</span>
         </div>
         <div class="disk-bar">
-          <div class="disk-fill" :style="{ width: `${disk.usage_percent}%` }" :class="getUsageClass(disk.usage_percent)"></div>
+          <div class="disk-fill" :style="{ width: `${disk.usage_percent || 0}%` }" :class="getUsageClass(disk.usage_percent)"></div>
         </div>
         <div class="disk-info">
           <span>{{ formatBytes(disk.used) }} / {{ formatBytes(disk.total) }}</span>
-          <span>{{ disk.file_system }}</span>
+          <span>{{ disk.file_system || '-' }}</span>
         </div>
       </div>
     </div>
@@ -28,13 +28,14 @@ export default {
     const disks = computed(() => props.data?.partitions || [])
     
     const getUsageClass = (percent) => {
-      if (percent >= 90) return 'danger'
-      if (percent >= 70) return 'warning'
+      const p = percent || 0
+      if (p >= 90) return 'danger'
+      if (p >= 70) return 'warning'
       return 'normal'
     }
-    
+
     const formatBytes = (bytes) => {
-      if (bytes === 0) return '0 B'
+      if (!bytes || bytes <= 0) return '0 B'
       const k = 1024
       const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
       const i = Math.floor(Math.log(bytes) / Math.log(k))

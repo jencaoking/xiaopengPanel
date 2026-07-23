@@ -1,0 +1,49 @@
+{
+  "admin": {
+    "name": "管理员",
+    "description": "系统超级管理员，拥有全部权限",
+    "permissions": [
+      "*:manage"
+    ],
+    "is_system": true
+  },
+  "operator": {
+    "name": "运维人员",
+    "description": "负责日常运维操作，可管理系统资源、服务、站点和文件",
+    "permissions": [
+      "dashboard:view",
+      "system:view",
+      "monitor:view",
+      "process:manage",
+      "service:manage",
+      "file:manage",
+      "site:manage",
+      "database:manage",
+      "log:view",
+      "web_service:manage",
+      "terminal:execute",
+      "editor:view",
+      "cron:manage"
+    ],
+    "is_system": true
+  },
+  "viewer": {
+    "name": "只读用户",
+    "description": "仅可查看各项系统信息，不可执行修改操作",
+    "permissions": [
+      "*:view"
+    ],
+    "is_system": true
+  },
+  "auditor": {
+    "name": "审计人员",
+    "description": "仅可查看日志与监控数据，用于安全审计",
+    "permissions": [
+      "dashboard:view",
+      "system:view",
+      "monitor:view",
+      "log:view"
+    ],
+    "is_system": true
+  }
+}

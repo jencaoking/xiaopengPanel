@@ -25,7 +25,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, watch, shallowRef } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, shallowRef, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -45,6 +45,7 @@ export default {
   setup(props) {
     const chartCanvas = ref(null)
     const chartInstance = shallowRef(null)
+    let isUnmounted = false
     
     const readSpeed = computed(() => props.data?.current?.read_speed || 0)
     const writeSpeed = computed(() => props.data?.current?.write_speed || 0)
@@ -55,7 +56,7 @@ export default {
     const writeHistory = computed(() => props.data?.write_speed || [])
     
     const formatSpeed = (bytesPerSec) => {
-      if (bytesPerSec === 0) return '0 B/s'
+      if (!bytesPerSec || bytesPerSec <= 0) return '0 B/s'
       const k = 1024
       const sizes = ['B/s', 'KB/s', 'MB/s', 'GB/s']
       const i = Math.floor(Math.log(bytesPerSec) / Math.log(k))
@@ -63,7 +64,7 @@ export default {
     }
     
     const initChart = () => {
-      if (!chartCanvas.value) return
+      if (!chartCanvas.value || isUnmounted) return
       
       const ctx = chartCanvas.value.getContext('2d')
       
@@ -123,7 +124,7 @@ export default {
             y: {
               display: true,
               beginAtZero: true,
-              grid: { color: 'rgba(0,0,0,0.05)' },
+              grid: { color: 'rgba(128, 128, 128, 0.15)' },
               ticks: {
                 font: { size: 10 },
                 callback: (value) => formatSpeed(value)
@@ -153,10 +154,18 @@ export default {
     
     watch(() => props.data, updateChart, { deep: true })
     
-    onMounted(() => setTimeout(initChart, 100))
-    
+    onMounted(() => {
+      nextTick(() => {
+        if (!isUnmounted) initChart()
+      })
+    })
+
     onUnmounted(() => {
-      if (chartInstance.value) chartInstance.value.destroy()
+      isUnmounted = true
+      if (chartInstance.value) {
+        chartInstance.value.destroy()
+        chartInstance.value = null
+      }
     })
     
     return {

@@ -143,19 +143,46 @@
             </div>
 
             <!-- 主题切换 -->
-            <button 
-              class="control-btn theme-toggle"
-              @click="toggleTheme"
-              :title="isDarkTheme ? $t('common.lightMode') : $t('common.darkMode')"
-              aria-label="切换主题"
-            >
-              <svg v-if="isDarkTheme" viewBox="0 0 24 24" class="icon-svg">
-                <path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" fill="currentColor"/>
-              </svg>
-              <svg v-else viewBox="0 0 24 24" class="icon-svg">
-                <path d="M9 2c-1.05 0-2.05.16-3 .46 1.69 1.24 2.79 3.26 2.79 5.54 0 3.87-3.13 7-7 7-1.06 0-2.06-.24-2.98-.66C.95 16.42 4.5 20 9 20c5.52 0 10-4.48 10-10S14.52 2 9 2z" fill="currentColor"/>
-              </svg>
-            </button>
+            <div class="theme-dropdown">
+              <button 
+                class="control-btn theme-toggle"
+                @click="toggleThemeDropdown"
+                :title="$t('common.theme')"
+                aria-haspopup="true"
+                :aria-expanded="isThemeDropdownOpen"
+              >
+                <svg v-if="isDarkTheme" viewBox="0 0 24 24" class="icon-svg">
+                  <path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z" fill="currentColor"/>
+                </svg>
+                <svg v-else viewBox="0 0 24 24" class="icon-svg">
+                  <path d="M9 2c-1.05 0-2.05.16-3 .46 1.69 1.24 2.79 3.26 2.79 5.54 0 3.87-3.13 7-7 7-1.06 0-2.06-.24-2.98-.66C.95 16.42 4.5 20 9 20c5.52 0 10-4.48 10-10S14.52 2 9 2z" fill="currentColor"/>
+                </svg>
+              </button>
+              <transition name="dropdown">
+                <div 
+                  v-if="isThemeDropdownOpen" 
+                  class="dropdown-menu theme-menu"
+                  @click.stop
+                >
+                  <div class="dropdown-header">{{ $t('common.selectTheme') }}</div>
+                  <button
+                    v-for="themeItem in themeList"
+                    :key="themeItem.id"
+                    class="dropdown-item theme-item"
+                    :class="{ active: currentTheme === themeItem.id }"
+                    @click="changeTheme(themeItem.id)"
+                  >
+                    <span class="theme-preview" :style="{ background: themeItem.previewBg }">
+                      <span class="theme-dot" :style="{ background: themeItem.accentColor }"></span>
+                    </span>
+                    <span class="theme-name">{{ $t('themes.' + themeItem.id) }}</span>
+                    <svg v-if="currentTheme === themeItem.id" class="theme-check" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </transition>
+            </div>
 
             <!-- 语言切换 -->
             <div class="language-dropdown">
@@ -257,6 +284,9 @@
           </transition>
         </div>
       </main>
+
+      <!-- AI 助手浮动组件 -->
+      <AIAssistant />
     </template>
 
     <!-- 未登录状态：显示登录页 -->
@@ -282,6 +312,11 @@ import WebService from './components/WebService.vue'
 import Databases from './components/Databases.vue'
 import Terminal from './components/Terminal.vue'
 import CodeEditor from './components/CodeEditor.vue'
+import Firewall from './components/Firewall.vue'
+import TwoFactorAuth from './components/TwoFactorAuth.vue'
+import CronManager from './components/CronManager.vue'
+import Roles from './components/Roles.vue'
+import AIAssistant from './components/AIAssistant.vue'
 import Login from './components/LoginModern.vue'
 
 // 组件映射
@@ -292,12 +327,16 @@ const componentMap = {
   logs: Logs,
   config: Config,
   users: Users,
+  roles: Roles,
   'file-manager': FileManager,
   sites: Sites,
   'web-service': WebService,
   databases: Databases,
   terminal: Terminal,
-  editor: CodeEditor
+  editor: CodeEditor,
+  firewall: Firewall,
+  'two-factor': TwoFactorAuth,
+  cron: CronManager
 }
 
 // 导航图标SVG路径
@@ -313,7 +352,11 @@ const iconPaths = {
   'web-service': 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z',
   databases: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z',
   terminal: 'M20 19V7H4v12h16m0-16a2 2 0 012 2v14a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h16M7.5 13h2v2h-2v-2m0-4h2v2h-2V9m4 4h2v2h-2v-2m0-4h2v2h-2V9m4 4h2v2h-2v-2m0-4h2v2h-2V9z',
-  editor: 'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z'
+  editor: 'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z',
+  firewall: 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z',
+  'two-factor': 'M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-1 14l-2-2 1.41-1.41L11 12.17l4.59-4.59L17 9l-6 6z',
+  cron: 'M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z',
+  roles: 'M12 2l-5.5 2.5v6c0 3.5 2.5 6.5 5.5 7.5 3-1 5.5-4 5.5-7.5v-6L12 2zm0 2.18l3.5 1.59v4.73c0 2.5-1.5 4.5-3.5 5.4-2-.9-3.5-2.9-3.5-5.4V5.77L12 4.18zM5 13c0 4.97 4.03 9 9 9v-2c-3.87 0-7-3.13-7-7H5z'
 }
 
 export default {
@@ -331,6 +374,10 @@ export default {
     Databases,
     Terminal,
     CodeEditor,
+    Firewall,
+    TwoFactorAuth,
+    CronManager,
+    Roles,
     Login
   },
   setup() {
@@ -342,15 +389,25 @@ export default {
     const searchQuery = ref('')
     const searchInput = ref(null)
     const isLanguageDropdownOpen = ref(false)
+    const isThemeDropdownOpen = ref(false)
     const isUserMenuOpen = ref(false)
     const isMobileSidebarOpen = ref(false)
     const isMobile = ref(false)
+
+    // 触摸手势状态（侧边栏滑动开关）
+    const touchStartX = ref(0)
+    const touchStartY = ref(0)
+    const touchCurrentX = ref(0)
+    const isSwiping = ref(false)
+    const swipeThreshold = 50 // 触发滑动开关的最小距离
+    const edgeThreshold = 30 // 屏幕边缘触发区域宽度
 
     // 计算属性
     const isLoggedIn = computed(() => store.getters.isLoggedIn)
     const currentPage = computed(() => store.state.currentPage)
     const isSidebarCollapsed = computed(() => !store.state.sidebarOpen)
     const isDarkTheme = computed(() => store.state.theme === 'dark')
+    const currentTheme = computed(() => store.state.theme)
     const currentLanguage = computed(() => store.state.language)
     const username = computed(() => store.state.user?.username || t('common.admin'))
     const userInitials = computed(() => {
@@ -370,32 +427,58 @@ export default {
         logs: t('common.logs'),
         config: t('common.config'),
         users: t('common.users'),
+        roles: t('common.roles'),
         'file-manager': t('common.fileManager'),
         sites: t('common.sites'),
         'web-service': t('common.webService'),
-        databases: t('common.databases')
+        databases: t('common.databases'),
+        firewall: t('common.firewall'),
+        cron: t('common.cron')
       }
       return titles[currentPage.value] || t('common.dashboard')
     })
 
-    const navItems = computed(() => [
-      { page: 'dashboard', iconPath: iconPaths.dashboard, text: t('common.dashboard') },
-      { page: 'processes', iconPath: iconPaths.processes, text: t('common.processes') },
-      { page: 'services', iconPath: iconPaths.services, text: t('common.services') },
-      { page: 'terminal', iconPath: iconPaths.terminal, text: t('common.terminal') },
-      { page: 'editor', iconPath: iconPaths.editor, text: t('common.editor') },
-      { page: 'logs', iconPath: iconPaths.logs, text: t('common.logs') },
-      { page: 'config', iconPath: iconPaths.config, text: t('common.config') },
-      { page: 'users', iconPath: iconPaths.users, text: t('common.users') },
-      { page: 'file-manager', iconPath: iconPaths['file-manager'], text: t('common.fileManager') },
-      { page: 'sites', iconPath: iconPaths.sites, text: t('common.sites') },
-      { page: 'web-service', iconPath: iconPaths['web-service'], text: t('common.webService') },
-      { page: 'databases', iconPath: iconPaths.databases, text: t('common.databases') }
-    ])
+    // 导航项：每项关联所需权限，由 hasPermission getter 决定可见性
+    // 权限为 null 表示对所有已登录用户可见（如双因素认证是用户自服务）
+    const allNavItems = [
+      { page: 'dashboard', iconPath: iconPaths.dashboard, text: t('common.dashboard'), permission: 'dashboard:view' },
+      { page: 'processes', iconPath: iconPaths.processes, text: t('common.processes'), permission: 'process:view' },
+      { page: 'services', iconPath: iconPaths.services, text: t('common.services'), permission: 'service:view' },
+      { page: 'terminal', iconPath: iconPaths.terminal, text: t('common.terminal'), permission: 'terminal:execute' },
+      { page: 'editor', iconPath: iconPaths.editor, text: t('common.editor'), permission: 'editor:view' },
+      { page: 'logs', iconPath: iconPaths.logs, text: t('common.logs'), permission: 'log:view' },
+      { page: 'config', iconPath: iconPaths.config, text: t('common.config'), permission: 'config:view' },
+      { page: 'users', iconPath: iconPaths.users, text: t('common.users'), permission: 'user:view' },
+      { page: 'roles', iconPath: iconPaths.roles, text: t('common.roles'), permission: 'role:view' },
+      { page: 'file-manager', iconPath: iconPaths['file-manager'], text: t('common.fileManager'), permission: 'file:view' },
+      { page: 'sites', iconPath: iconPaths.sites, text: t('common.sites'), permission: 'site:view' },
+      { page: 'web-service', iconPath: iconPaths['web-service'], text: t('common.webService'), permission: 'web_service:view' },
+      { page: 'databases', iconPath: iconPaths.databases, text: t('common.databases'), permission: 'database:view' },
+      { page: 'firewall', iconPath: iconPaths.firewall, text: t('common.firewall'), permission: 'firewall:view' },
+      { page: 'two-factor', iconPath: iconPaths['two-factor'], text: t('common.twoFactor'), permission: null },
+      { page: 'cron', iconPath: iconPaths.cron, text: t('common.cron'), permission: 'cron:view' }
+    ]
+
+    const navItems = computed(() => {
+      const hasPermission = store.getters.hasPermission
+      return allNavItems.filter(item => !item.permission || hasPermission(item.permission))
+    })
 
     const availableLanguages = [
       { code: 'zh', name: t('common.chinese'), flag: '🇨🇳' },
+      { code: 'tw', name: t('common.traditionalChinese'), flag: '🇹🇼' },
       { code: 'en', name: t('common.english'), flag: '🇺🇸' }
+    ]
+
+    const themeList = [
+      { id: 'dark', previewBg: 'linear-gradient(135deg, #000000, #1C1C1E)', accentColor: '#007AFF' },
+      { id: 'light', previewBg: 'linear-gradient(135deg, #FFFFFF, #F2F2F7)', accentColor: '#007AFF' },
+      { id: 'midnight', previewBg: 'linear-gradient(135deg, #0A0E27, #1A2347)', accentColor: '#0A84FF' },
+      { id: 'sunset', previewBg: 'linear-gradient(135deg, #1A0F0A, #3A2418)', accentColor: '#FF9500' },
+      { id: 'ocean', previewBg: 'linear-gradient(135deg, #041824, #103248)', accentColor: '#5AC8FA' },
+      { id: 'forest', previewBg: 'linear-gradient(135deg, #081511, #162B22)', accentColor: '#34C759' },
+      { id: 'rose', previewBg: 'linear-gradient(135deg, #1A0815, #3A1828)', accentColor: '#FF2D55' },
+      { id: 'carbon', previewBg: 'linear-gradient(135deg, #0D0D0D, #262626)', accentColor: '#8E8E93' }
     ]
 
     // 方法
@@ -417,6 +500,19 @@ export default {
       store.commit('toggleTheme')
     }
 
+    const toggleThemeDropdown = () => {
+      isThemeDropdownOpen.value = !isThemeDropdownOpen.value
+      if (isThemeDropdownOpen.value) {
+        isLanguageDropdownOpen.value = false
+        isUserMenuOpen.value = false
+      }
+    }
+
+    const changeTheme = (theme) => {
+      store.commit('setTheme', theme)
+      isThemeDropdownOpen.value = false
+    }
+
     const toggleSearch = () => {
       isSearchExpanded.value = !isSearchExpanded.value
       if (isSearchExpanded.value) {
@@ -434,6 +530,7 @@ export default {
 
     const toggleLanguageDropdown = () => {
       isLanguageDropdownOpen.value = !isLanguageDropdownOpen.value
+      isThemeDropdownOpen.value = false
       isUserMenuOpen.value = false
     }
 
@@ -446,10 +543,12 @@ export default {
     const toggleUserMenu = () => {
       isUserMenuOpen.value = !isUserMenuOpen.value
       isLanguageDropdownOpen.value = false
+      isThemeDropdownOpen.value = false
     }
 
     const closeAllDropdowns = () => {
       isLanguageDropdownOpen.value = false
+      isThemeDropdownOpen.value = false
       isUserMenuOpen.value = false
     }
 
@@ -459,6 +558,46 @@ export default {
 
     const closeMobileSidebar = () => {
       isMobileSidebarOpen.value = false
+    }
+
+    // 触摸手势处理：侧边栏左滑打开、右滑关闭
+    const handleTouchStart = (event) => {
+      if (!isMobile.value) return
+      const touch = event.touches[0]
+      touchStartX.value = touch.clientX
+      touchStartY.value = touch.clientY
+      touchCurrentX.value = touch.clientX
+      // 仅在屏幕左边缘或侧边栏已打开时启动滑动判定
+      const isEdgeStart = touch.clientX < edgeThreshold
+      if (isEdgeStart || isMobileSidebarOpen.value) {
+        isSwiping.value = true
+      }
+    }
+
+    const handleTouchMove = (event) => {
+      if (!isSwiping.value) return
+      const touch = event.touches[0]
+      touchCurrentX.value = touch.clientX
+      // 判定为水平滑动而非垂直滚动：水平位移大于垂直位移
+      const deltaX = Math.abs(touch.clientX - touchStartX.value)
+      const deltaY = Math.abs(touch.clientY - touchStartY.value)
+      if (deltaY > deltaX) {
+        isSwiping.value = false
+      }
+    }
+
+    const handleTouchEnd = () => {
+      if (!isSwiping.value) return
+      const deltaX = touchCurrentX.value - touchStartX.value
+      // 从左边缘右滑：打开侧边栏
+      if (touchStartX.value < edgeThreshold && deltaX > swipeThreshold) {
+        isMobileSidebarOpen.value = true
+      }
+      // 侧边栏打开时左滑：关闭侧边栏
+      else if (isMobileSidebarOpen.value && deltaX < -swipeThreshold) {
+        isMobileSidebarOpen.value = false
+      }
+      isSwiping.value = false
     }
 
     const goToProfile = () => {
@@ -473,7 +612,7 @@ export default {
 
     // 点击外部关闭下拉菜单
     const handleClickOutside = (event) => {
-      const dropdowns = document.querySelectorAll('.language-dropdown, .user-menu')
+      const dropdowns = document.querySelectorAll('.language-dropdown, .theme-dropdown, .user-menu')
       let clickedInside = false
       dropdowns.forEach(dropdown => {
         if (dropdown.contains(event.target)) {
@@ -495,14 +634,26 @@ export default {
 
     // 生命周期
     onMounted(() => {
+      // 同步 i18n locale 与 store 中保存的语言偏好（避免刷新后语言回退到默认 'zh'）
+      const savedLanguage = store.state.language
+      if (savedLanguage && savedLanguage !== locale.value) {
+        locale.value = savedLanguage
+      }
       document.addEventListener('click', handleClickOutside)
       window.addEventListener('resize', checkMobile)
+      // 触摸手势：仅在移动端启用
+      document.addEventListener('touchstart', handleTouchStart, { passive: true })
+      document.addEventListener('touchmove', handleTouchMove, { passive: true })
+      document.addEventListener('touchend', handleTouchEnd, { passive: true })
       checkMobile()
     })
 
     onUnmounted(() => {
       document.removeEventListener('click', handleClickOutside)
       window.removeEventListener('resize', checkMobile)
+      document.removeEventListener('touchstart', handleTouchStart)
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
     })
 
     return {
@@ -510,6 +661,8 @@ export default {
       currentPage,
       isSidebarCollapsed,
       isDarkTheme,
+      currentTheme,
+      themeList,
       currentLanguage,
       username,
       userInitials,
@@ -521,6 +674,7 @@ export default {
       searchQuery,
       searchInput,
       isLanguageDropdownOpen,
+      isThemeDropdownOpen,
       isUserMenuOpen,
       isMobileSidebarOpen,
       isMobile,
@@ -528,6 +682,8 @@ export default {
       handleNavClick,
       handleLogout,
       toggleTheme,
+      toggleThemeDropdown,
+      changeTheme,
       toggleSearch,
       closeSearch,
       toggleLanguageDropdown,
@@ -535,6 +691,9 @@ export default {
       toggleUserMenu,
       openMobileSidebar,
       closeMobileSidebar,
+      handleTouchStart,
+      handleTouchMove,
+      handleTouchEnd,
       goToProfile,
       goToSettings
     }
@@ -556,6 +715,7 @@ export default {
 .app-sidebar {
   width: var(--ios-sidebar-width);
   height: 100vh;
+  height: 100dvh;
   background: var(--ios-sidebar-bg);
   backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
@@ -566,10 +726,15 @@ export default {
   position: fixed;
   left: 0;
   top: 0;
+  /* Safe area: 留出状态栏和底部 Home Indicator 空间 */
+  padding-top: var(--ios-safe-area-top);
+  padding-bottom: var(--ios-safe-area-bottom);
+  padding-left: var(--ios-safe-area-left);
   z-index: var(--ios-z-fixed);
   transition: width var(--ios-transition-spring),
               background var(--ios-transition-normal),
-              border-color var(--ios-transition-normal);
+              border-color var(--ios-transition-normal),
+              transform var(--ios-transition-spring);
   overflow: hidden;
 }
 
@@ -923,8 +1088,69 @@ export default {
 
 /* 下拉菜单 - 液态玻璃 */
 .language-dropdown,
+.theme-dropdown,
 .user-menu {
   position: relative;
+}
+
+/* 主题选择器菜单 */
+.theme-menu {
+  min-width: 220px;
+  max-height: 380px;
+  overflow-y: auto;
+}
+
+.theme-item {
+  display: flex;
+  align-items: center;
+  gap: var(--ios-space-3);
+  padding: var(--ios-space-2) var(--ios-space-3) !important;
+}
+
+.theme-item.active {
+  background: var(--ios-fill-quaternary);
+}
+
+.theme-preview {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--ios-radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 0.5px solid var(--ios-glass-border);
+  overflow: hidden;
+}
+
+.theme-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.theme-name {
+  flex: 1;
+  font-size: var(--ios-text-subhead);
+  font-weight: var(--ios-weight-regular);
+  color: var(--ios-label-primary);
+}
+
+.theme-check {
+  width: 16px;
+  height: 16px;
+  color: var(--ios-blue);
+  flex-shrink: 0;
+}
+
+.dropdown-header {
+  padding: var(--ios-space-2) var(--ios-space-3);
+  font-size: var(--ios-text-caption1);
+  font-weight: var(--ios-weight-semibold);
+  color: var(--ios-label-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .dropdown-menu {
@@ -1127,14 +1353,14 @@ export default {
   .app-sidebar {
     width: var(--ios-sidebar-collapsed-width);
   }
-  
+
   .app-sidebar .brand-text,
   .app-sidebar .nav-text,
   .app-sidebar .logout-text,
   .app-sidebar .sidebar-toggle-btn {
     display: none;
   }
-  
+
   .app-main {
     margin-left: var(--ios-sidebar-collapsed-width);
   }
@@ -1146,53 +1372,100 @@ export default {
     transform: translateX(-100%);
     transition: transform var(--ios-transition-spring);
   }
-  
+
   .app-sidebar.sidebar-mobile-open {
     transform: translateX(0);
   }
-  
+
   .app-sidebar .brand-text,
   .app-sidebar .nav-text,
   .app-sidebar .logout-text {
     display: block;
   }
-  
+
   .app-main {
     margin-left: 0;
   }
-  
+
   .mobile-overlay {
     display: block;
   }
-  
+
   .mobile-menu-btn {
     display: flex;
   }
-  
+
+  /* 头部：保留标题，隐藏次要控件 */
   .page-title {
     font-size: var(--ios-text-headline);
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
-  
+
+  /* 搜索框：保留图标按钮，移除展开式输入（移动端体验不佳） */
   .search-box {
     display: none;
   }
-  
+
+  /* 用户名在移动端隐藏（仅显示头像），节省横向空间 */
+  .user-name {
+    display: none;
+  }
+
+  .dropdown-icon {
+    display: none;
+  }
+
   .page-content {
     padding: var(--ios-space-4);
+    /* 底部留出 Home Indicator 空间 */
+    padding-bottom: calc(var(--ios-space-4) + var(--ios-safe-area-bottom));
   }
 }
 
 @media (max-width: 480px) {
   .app-header {
-    padding: 0 var(--ios-space-4);
+    padding: 0 var(--ios-space-3);
+    /* 适配顶部状态栏 */
+    padding-top: 0;
+    height: 56px;
   }
-  
+
+  /* 语言按钮只显示图标，不显示语言代码 */
   .language-code {
     display: none;
   }
-  
+
+  .language-btn {
+    width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  /* 移动端菜单按钮和控件按钮：增大触摸目标 */
+  .mobile-menu-btn,
+  .control-btn {
+    width: 44px;
+    height: 44px;
+  }
+
   .page-content {
     padding: var(--ios-space-3);
+    padding-bottom: calc(var(--ios-space-3) + var(--ios-safe-area-bottom));
+  }
+}
+
+/* 极小屏幕：进一步紧凑头部 */
+@media (max-width: 360px) {
+  .app-header {
+    gap: var(--ios-space-1);
+  }
+
+  .header-controls {
+    gap: var(--ios-space-1);
   }
 }
 
@@ -1258,8 +1531,4 @@ export default {
 
 /* Reduced Motion - 禁用背景光斑动画 */
 @media (prefers-reduced-motion: reduce) {
-  .ios-bg-orb {
-    animation: none !important;
-  }
-}
-</style>
+  .ios-b

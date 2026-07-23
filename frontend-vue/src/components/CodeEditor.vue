@@ -400,54 +400,54 @@ export default {
     let contentChangeDisposables = new Map() // path -> IDisposable
     let completionProviders = [] // IDisposable[]
     let cursorDisposable = null
-    let saveCommandDisposable = null
+    let selectionDisposable = null
     let resizeObserver = null
     let autoSaveTimers = new Map() // path -> timeoutId
     let outlineTimer = null
+    let emptyModel = null // 关闭所有文件时的占位模型（复用避免内存泄漏）
+
+    // 规范化路径用于比较（统一为正斜杠，末尾不加斜杠）
+    const normalizePath = (p) => p.replace(/\\/g, '/').replace(/\/+$/, '')
 
     // ========== 计算属性 ==========
     const breadcrumbs = computed(() => {
       if (!currentBrowserPath.value) {
         return whitelistDirs.value.map(d => ({ name: d.name || d.path, path: d.path }))
       }
-      const parts = currentBrowserPath.value.replace(/\\/g, '/').split('/').filter(Boolean)
-      const crumbs = []
-      let acc = ''
-      // 查找所属的白名单根
+      const normalizedCurrent = normalizePath(currentBrowserPath.value)
+      // 查找所属的白名单根（路径边界匹配，避免 J:\PRO 误匹配 J:\PROJECT）
       const root = whitelistDirs.value.find(d => {
-        return currentBrowserPath.value.replace(/\\/g, '/').startsWith(d.path.replace(/\\/g, '/'))
+        const r = normalizePath(d.path)
+        return normalizedCurrent === r || normalizedCurrent.startsWith(r + '/')
       })
-      if (root) {
-        crumbs.push({ name: root.name || root.path, path: root.path })
-        const rootParts = root.path.replace(/\\/g, '/').split('/').filter(Boolean)
-        parts.slice(rootParts.length).forEach(part => {
-          acc = root.path.replace(/\\/g, '/') + '/' + parts.slice(rootParts.length, parts.indexOf(part) + 1).join('/')
-          acc = acc.replace(/\//g, '\\')
-          crumbs.push({ name: part, path: acc })
-        })
-      } else {
-        parts.forEach((part, idx) => {
-          acc = (idx === 0 ? '' : acc) + (idx === 0 && /^[a-zA-Z]:$/.test(part) ? part + '\\' : '/' + part)
-          crumbs.push({ name: part, path: idx === 0 ? part + '\\' : acc })
-        })
-      }
+      if (!root) return []
+      const crumbs = [{ name: root.name || root.path, path: root.path }]
+      // 从根路径开始逐级构建子路径
+      const rootNormalized = normalizePath(root.path)
+      const relativeParts = normalizedCurrent.substring(rootNormalized.length).split('/').filter(Boolean)
+      let currentPath = root.path
+      relativeParts.forEach(part => {
+        currentPath = currentPath.replace(/[\\/]+$/, '') + '\\' + part
+        crumbs.push({ name: part, path: currentPath })
+      })
       return crumbs
     })
 
     const currentBrowserParent = computed(() => {
       if (!currentBrowserPath.value) return null
-      // 查找所属白名单根
+      const normalizedCurrent = normalizePath(currentBrowserPath.value)
+      // 查找所属白名单根（路径边界匹配）
       const root = whitelistDirs.value.find(d => {
-        return currentBrowserPath.value.replace(/\\/g, '/').startsWith(d.path.replace(/\\/g, '/'))
+        const r = normalizePath(d.path)
+        return normalizedCurrent === r || normalizedCurrent.startsWith(r + '/')
       })
-      if (root && currentBrowserPath.value.replace(/\\/g, '/') === root.path.replace(/\\/g, '/')) {
-        return null // 已在根目录
-      }
-      const normalized = currentBrowserPath.value.replace(/\\/g, '/')
-      const idx = normalized.lastIndexOf('/')
+      if (!root) return null
+      // 已在根目录，不能继续向上
+      if (normalizedCurrent === normalizePath(root.path)) return null
+      // 计算父目录（保留原始路径分隔符风格）
+      const idx = normalizedCurrent.lastIndexOf('/')
       if (idx <= 0) return null
-      const parent = normalized.substring(0, idx)
-      return parent.replace(/\//g, '\\')
+      return normalizedCurrent.substring(0, idx).replace(/\//g, '\\')
     })
 
     // ========== 工具函数 ==========
@@ -528,12 +528,12 @@ export default {
       })
 
       // 选中区域变化 → 更新选中信息
-      editor.onDidChangeCursorSelection(() => {
+      selectionDisposable = editor.onDidChangeCursorSelection(() => {
         updateSelectionStatus()
       })
 
-      // Ctrl/Cmd+S → 保存
-      saveCommandDisposable = editor.addCommand(
+      // Ctrl/Cmd+S → 保存（addCommand 返回 void，命令随编辑器销毁自动清理）
+      editor.addCommand(
         monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS,
         () => saveCurrentFile()
       )
@@ -730,11 +730,20 @@ export default {
       closeFileSession(file.path)
 
       if (activeFile.value?.path === file.path) {
-        activeFile.value = openFiles.value[Math.max(0, idx - 1)] || null
-        if (activeFile.value) {
-          switchFile(activeFile.value)
-        } else if (editor) {
-          editor.setModel(monaco.editor.createModel('', 'plaintext'))
+        // 不提前修改 activeFile，让 switchFile 正确处理会话保存
+        // （旧模型已销毁，saveFileSession 会因 models.get 返回 undefined 而安全跳过）
+        const nextFile = openFiles.value[Math.max(0, idx - 1)] || null
+        if (nextFile) {
+          switchFile(nextFile)
+        } else {
+          activeFile.value = null
+          if (editor) {
+            // 复用空模型避免内存泄漏
+            if (!emptyModel) {
+              emptyModel = monaco.editor.createModel('', 'plaintext')
+            }
+            editor.setModel(emptyModel)
+          }
         }
       }
     }
@@ -1033,12 +1042,17 @@ export default {
       // 清理模型
       models.forEach(m => m.dispose())
       models.clear()
-      // 清理光标监听
+      // 清理占位空模型
+      if (emptyModel) {
+        emptyModel.dispose()
+        emptyModel = null
+      }
+      // 清理光标和选中监听
       if (cursorDisposable) cursorDisposable.dispose()
-      if (saveCommandDisposable) saveCommandDisposable.dispose()
+      if (selectionDisposable) selectionDisposable.dispose()
       // 清理 ResizeObserver
       if (resizeObserver) resizeObserver.disconnect()
-      // 销毁编辑器
+      // 销毁编辑器（addCommand 注册的快捷键随之清理）
       if (editor) editor.dispose()
       editor = null
       if (outlineTimer) clearTimeout(outlineTimer)

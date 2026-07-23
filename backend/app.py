@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from config.config import Config, config_instance
 from modules.middleware import secure_headers
+from modules.log_manager import log_system, set_request_id, clear_request_id
 
 app = Flask(__name__)
 app.config.from_object(Config)
@@ -14,6 +15,16 @@ app.config.from_object(Config)
 CORS(app, resources={r"/*": {"origins": Config.CORS_ORIGINS}})
 
 app.after_request(secure_headers)
+
+# 请求链路追踪：注入/清理 request_id
+@app.before_request
+def _inject_request_id():
+    set_request_id()
+
+@app.after_request
+def _clear_request_id(response):
+    clear_request_id()
+    return response
 
 # 简单的内存速率限制器
 class RateLimiter:
@@ -81,10 +92,14 @@ def rate_limit(limiter):
 try:
     from modules.terminal_manager import init_socketio
     socketio = init_socketio(app)
+    # 向系统监控模块注入 socketio 实例，启用实时推送
+    from modules.system_monitor import set_socketio_reference, init_monitor_namespace
+    set_socketio_reference(socketio)
+    init_monitor_namespace(socketio)
 except ImportError:
     socketio = None
 except Exception as e:
-    print(f"Warning: Could not initialize SocketIO: {e}")
+    log_system(f'Could not initialize SocketIO: {e}', level='ERROR', name='app', exc_info=True)
     socketio = None
 
 # 健康检查路由
@@ -95,6 +110,22 @@ def health_check():
 # 导入API路由并注册蓝图
 from api.routes import api
 app.register_blueprint(api, url_prefix='/api')
+
+# 注册 AI API 蓝图
+try:
+    from api.ai_routes import ai_api
+    app.register_blueprint(ai_api, url_prefix='/api')
+except ImportError as e:
+    print(f"Warning: Could not load AI routes: {e}")
+except Exception as e:
+    print(f"Warning: AI routes registration failed: {e}")
+
+# 启动定时任务调度器
+try:
+    from modules.cron_manager import cron_manager
+    cron_manager.start_scheduler()
+except Exception as e:
+    log_system(f'Could not start cron scheduler: {e}', level='ERROR', name='app', exc_info=True)
 
 # 添加获取和更新配置的API端点
 @app.route('/api/config/panel', methods=['GET'])

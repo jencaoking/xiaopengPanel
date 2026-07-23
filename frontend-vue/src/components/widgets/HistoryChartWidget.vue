@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, watch, shallowRef } from 'vue'
+import { ref, onMounted, onUnmounted, watch, shallowRef, nextTick } from 'vue'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -21,12 +21,13 @@ export default {
   setup(props) {
     const chartCanvas = ref(null)
     const chartInstance = shallowRef(null)
-    
+    let isUnmounted = false
+
     const initChart = () => {
-      if (!chartCanvas.value) return
-      
+      if (!chartCanvas.value || isUnmounted) return
+
       const ctx = chartCanvas.value.getContext('2d')
-      
+
       chartInstance.value = new Chart(ctx, {
         type: 'line',
         data: {
@@ -63,18 +64,56 @@ export default {
           },
           scales: {
             x: { display: true, grid: { display: false }, ticks: { font: { size: 10 }, maxTicksLimit: 8 } },
-            y: { display: true, beginAtZero: true, max: 100, grid: { color: 'rgba(0,0,0,0.05)' }, ticks: { font: { size: 10 }, callback: (v) => v + '%' } }
+            y: { display: true, beginAtZero: true, max: 100, grid: { color: 'rgba(128, 128, 128, 0.15)' }, ticks: { font: { size: 10 }, callback: (v) => v + '%' } }
           }
         }
       })
+
+      updateChart()
     }
-    
-    onMounted(() => setTimeout(initChart, 100))
-    
-    onUnmounted(() => {
-      if (chartInstance.value) chartInstance.value.destroy()
+
+    const updateChart = () => {
+      if (!chartInstance.value || isUnmounted) return
+
+      const cpuHistory = props.data?.cpu || []
+      const memHistory = props.data?.memory || []
+
+      // 尝试从 data 中提取历史数据
+      const cpuData = Array.isArray(cpuHistory) ? cpuHistory : (cpuHistory?.history || [])
+      const memData = Array.isArray(memHistory) ? memHistory : (memHistory?.history || [])
+
+      const labels = cpuData.map((item, i) => {
+        const ts = item.timestamp || (memData[i] && memData[i].timestamp)
+        if (!ts) return ''
+        return new Date(ts).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+      })
+
+      chartInstance.value.data.labels = labels
+      chartInstance.value.data.datasets[0].data = cpuData.map(item =>
+        typeof item === 'number' ? item : (item.value || item.usage || item.cpu_percent || 0)
+      )
+      chartInstance.value.data.datasets[1].data = memData.map(item =>
+        typeof item === 'number' ? item : (item.value || item.percent || item.memory_percent || 0)
+      )
+      chartInstance.value.update('none')
+    }
+
+    watch(() => props.data, updateChart, { deep: true })
+
+    onMounted(() => {
+      nextTick(() => {
+        if (!isUnmounted) initChart()
+      })
     })
-    
+
+    onUnmounted(() => {
+      isUnmounted = true
+      if (chartInstance.value) {
+        chartInstance.value.destroy()
+        chartInstance.value = null
+      }
+    })
+
     return { chartCanvas }
   }
 }

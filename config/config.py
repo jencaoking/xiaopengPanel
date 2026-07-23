@@ -1,6 +1,7 @@
 import os
 import json
 import secrets
+import time
 from dotenv import load_dotenv
 
 # 加载环境变量
@@ -62,7 +63,17 @@ class Config:
             },
             "logging": {
                 "level": "INFO",
-                "dir": "logs"
+                "dir": "logs",
+                "max_bytes": 10485760,
+                "backup_count": 5,
+                "when": "midnight",
+                "interval": 1,
+                "retention_days": 30,
+                "compress": True,
+                "json_format": False,
+                "console_enabled": True,
+                "console_level": "INFO",
+                "console_color": True
             },
             "file_manager": {
                 "whitelist_dirs": [
@@ -93,6 +104,18 @@ class Config:
                         "max_versions": 10
                     }
                 }
+            },
+            "ai": {
+                "enabled": False,
+                "provider": "deepseek",
+                "api_key": "",
+                "model": "deepseek-chat",
+                "base_url": "",
+                "temperature": 0.3,
+                "max_tokens": 4096,
+                "max_iterations": 10,
+                "auto_repair_enabled": False,
+                "confirmation_required": True
             }
         }
     
@@ -106,6 +129,8 @@ class Config:
         try:
             with open(self._users_file, 'r', encoding='utf-8') as f:
                 self.USERS = json.load(f)
+            # 向后兼容：为旧用户数据补全状态与时间元数据字段
+            self._migrate_users_fields()
         except FileNotFoundError:
             # 如果用户配置文件不存在，使用默认配置
             default_users = {
@@ -116,6 +141,7 @@ class Config:
             }
             self._save_users(default_users)
             self.USERS = default_users
+            self._migrate_users_fields()
         except json.JSONDecodeError:
             # 用户配置文件格式错误，使用默认配置
             default_users = {
@@ -126,6 +152,26 @@ class Config:
             }
             self._save_users(default_users)
             self.USERS = default_users
+            self._migrate_users_fields()
+
+    def _migrate_users_fields(self):
+        """为旧版本用户数据补全 status/created_at/updated_at 字段，并持久化"""
+        now = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+        changed = False
+        for username, user_data in self.USERS.items():
+            if not isinstance(user_data, dict):
+                continue
+            if 'status' not in user_data:
+                user_data['status'] = 'active'
+                changed = True
+            if 'created_at' not in user_data:
+                user_data['created_at'] = now
+                changed = True
+            if 'updated_at' not in user_data:
+                user_data['updated_at'] = now
+                changed = True
+        if changed:
+            self._save_users(self.USERS)
     
     def _save_users(self, users):
         """保存用户配置到JSON文件"""
@@ -138,7 +184,10 @@ class Config:
         self.BASE_DIR = os.path.dirname(os.path.dirname(__file__))
         
         # CORS配置
-        self.CORS_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
+        self.CORS_ORIGINS = [
+            'http://localhost:8000', 'http://127.0.0.1:8000',
+            'http://localhost:3000', 'http://127.0.0.1:3000'  # vite dev server
+        ]
         
         # 安全响应头
         self.SECURE_HEADERS = {
@@ -153,18 +202,68 @@ class Config:
         """更新用户密码"""
         if username in self.USERS:
             self.USERS[username]['password'] = password
+            self.USERS[username]['updated_at'] = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
             self._save_users(self.USERS)
             # 更新静态配置以保持一致性
             StaticConfig.USERS = self.USERS
             return True
         return False
-    
+
     def verify_user_password(self, username, password):
         """验证用户密码"""
         if username in self.USERS:
             import bcrypt
             return bcrypt.checkpw(password.encode('utf-8'), self.USERS[username]['password'].encode('utf-8'))
         return False
+
+    def add_user(self, username, user_data):
+        """添加新用户并持久化"""
+        if username in self.USERS:
+            return False
+        now = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+        user_data.setdefault('status', 'active')
+        user_data.setdefault('created_at', now)
+        user_data.setdefault('updated_at', now)
+        self.USERS[username] = user_data
+        self._save_users(self.USERS)
+        StaticConfig.USERS = self.USERS
+        return True
+
+    def delete_user(self, username):
+        """删除用户并持久化"""
+        if username not in self.USERS:
+            return False
+        del self.USERS[username]
+        self._save_users(self.USERS)
+        StaticConfig.USERS = self.USERS
+        return True
+
+    def update_user_role(self, username, role):
+        """更新用户角色并持久化"""
+        if username not in self.USERS:
+            return False
+        self.USERS[username]['role'] = role
+        self.USERS[username]['updated_at'] = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+        self._save_users(self.USERS)
+        StaticConfig.USERS = self.USERS
+        return True
+
+    def update_user_status(self, username, status):
+        """更新用户状态并持久化"""
+        if username not in self.USERS:
+            return False
+        self.USERS[username]['status'] = status
+        self.USERS[username]['updated_at'] = time.strftime('%Y-%m-%dT%H:%M:%S', time.localtime())
+        self._save_users(self.USERS)
+        StaticConfig.USERS = self.USERS
+        return True
+
+    def count_admins(self):
+        """统计处于 active 状态的管理员数量"""
+        return sum(
+            1 for u in self.USERS.values()
+            if isinstance(u, dict) and u.get('role') == 'admin' and u.get('status', 'active') == 'active'
+        )
     
     @property
     def SECRET_KEY(self):
@@ -214,11 +313,55 @@ class Config:
     @property
     def LOG_DIR(self):
         return os.path.join(os.path.dirname(os.path.dirname(__file__)), self._config['logging']['dir'])
-    
+
     @LOG_DIR.setter
     def LOG_DIR(self, value):
         self._config['logging']['dir'] = os.path.basename(value)
         self._save_config(self._config)
+
+    def _log_cfg(self, key, default=None):
+        """读取 logging 配置项，兼容旧版配置文件缺失字段"""
+        return self._config.get('logging', {}).get(key, default)
+
+    @property
+    def LOG_MAX_BYTES(self):
+        return self._log_cfg('max_bytes', 10 * 1024 * 1024)
+
+    @property
+    def LOG_BACKUP_COUNT(self):
+        return self._log_cfg('backup_count', 5)
+
+    @property
+    def LOG_WHEN(self):
+        return self._log_cfg('when', 'midnight')
+
+    @property
+    def LOG_INTERVAL(self):
+        return self._log_cfg('interval', 1)
+
+    @property
+    def LOG_RETENTION_DAYS(self):
+        return self._log_cfg('retention_days', 30)
+
+    @property
+    def LOG_COMPRESS(self):
+        return self._log_cfg('compress', True)
+
+    @property
+    def LOG_JSON_FORMAT(self):
+        return self._log_cfg('json_format', False)
+
+    @property
+    def LOG_CONSOLE_ENABLED(self):
+        return self._log_cfg('console_enabled', True)
+
+    @property
+    def LOG_CONSOLE_LEVEL(self):
+        return self._log_cfg('console_level', 'INFO')
+
+    @property
+    def LOG_CONSOLE_COLOR(self):
+        return self._log_cfg('console_color', True)
     
     @property
     def IP_WHITELIST_ENABLED(self):
@@ -408,6 +551,10 @@ class Config:
 
 # 创建全局配置实例
 config_instance = Config()
+
+# 同步 USERS 为类属性，使 Config.USERS 类访问生效（auth.py / user_manager.py 依赖）
+# 注：USERS 为实例属性，类访问默认会 AttributeError，此处显式暴露类属性
+Config.USERS = config_instance.USERS
 
 # 为了保持向后兼容，提供Config类的静态访问方式
 class StaticConfig:

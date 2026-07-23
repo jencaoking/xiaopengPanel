@@ -29,77 +29,120 @@
         </div>
         
         <form class="login-form" @submit.prevent="handleLogin">
-          <div class="form-group">
-            <label class="form-label" for="username">用户名</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-              <input
-                id="username"
-                v-model="form.username"
-                type="text"
-                class="form-input"
-                placeholder="请输入用户名"
-                required
-                autocomplete="username"
-                :disabled="loading"
-              >
+          <!-- 普通登录表单 -->
+          <template v-if="!twoFactorRequired">
+            <div class="form-group">
+              <label class="form-label" for="username">用户名</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="12" cy="7" r="4" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <input
+                  id="username"
+                  v-model="form.username"
+                  type="text"
+                  class="form-input"
+                  placeholder="请输入用户名"
+                  required
+                  autocomplete="username"
+                  :disabled="loading"
+                >
+              </div>
             </div>
-          </div>
-          
-          <div class="form-group">
-            <label class="form-label" for="password">密码</label>
-            <div class="input-wrapper">
-              <svg class="input-icon" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-              <input
-                id="password"
-                v-model="form.password"
-                :type="showPassword ? 'text' : 'password'"
-                class="form-input"
-                placeholder="请输入密码"
-                required
-                autocomplete="current-password"
-                :disabled="loading"
-              >
+
+            <div class="form-group">
+              <label class="form-label" for="password">密码</label>
+              <div class="input-wrapper">
+                <svg class="input-icon" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="11" width="18" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                <input
+                  id="password"
+                  v-model="form.password"
+                  :type="showPassword ? 'text' : 'password'"
+                  class="form-input"
+                  placeholder="请输入密码"
+                  required
+                  autocomplete="current-password"
+                  :disabled="loading"
+                >
+                <button
+                  type="button"
+                  class="password-toggle"
+                  @click="showPassword = !showPassword"
+                  :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                >
+                  <svg v-if="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                    <circle cx="12" cy="12" r="3"/>
+                  </svg>
+                  <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
+                    <line x1="1" y1="1" x2="23" y2="23"/>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-options">
+              <label class="ios-toggle-wrapper">
+                <input v-model="form.rememberMe" type="checkbox" class="ios-toggle-input" :disabled="loading">
+                <span class="ios-toggle-slider"></span>
+                <span class="toggle-label">记住我</span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              class="ios-btn ios-btn-primary btn-login"
+              :disabled="loading || !isValid"
+            >
+              <span v-if="loading" class="ios-spinner"></span>
+              <span>{{ loading ? '登录中...' : '登录' }}</span>
+            </button>
+          </template>
+
+          <!-- 2FA验证表单 -->
+          <template v-else>
+            <div class="tfa-section">
+              <div class="tfa-icon">
+                <svg viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="5" width="16" height="14" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M8 9h8M8 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                  <circle cx="16" cy="15" r="1.5" fill="currentColor"/>
+                </svg>
+              </div>
+              <p class="tfa-hint">请输入认证应用中的6位验证码</p>
+              <div class="tfa-code-container">
+                <input
+                  v-for="i in 6"
+                  :key="i"
+                  :ref="'tfaInput' + i"
+                  v-model="tfaCode[i - 1]"
+                  type="text"
+                  maxlength="1"
+                  class="tfa-code-input"
+                  @input="onTfaInput(i, $event)"
+                  @keydown.delete="onTfaDelete(i, $event)"
+                  @paste="onTfaPaste"
+                  :disabled="loading"
+                >
+              </div>
               <button
-                type="button"
-                class="password-toggle"
-                @click="showPassword = !showPassword"
-                :aria-label="showPassword ? '隐藏密码' : '显示密码'"
+                type="submit"
+                class="ios-btn ios-btn-primary btn-login"
+                :disabled="loading || tfaCode.join('').length !== 6"
               >
-                <svg v-if="showPassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                  <circle cx="12" cy="12" r="3"/>
-                </svg>
-                <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/>
-                  <line x1="1" y1="1" x2="23" y2="23"/>
-                </svg>
+                <span v-if="loading" class="ios-spinner"></span>
+                <span>{{ loading ? '验证中...' : '验证' }}</span>
+              </button>
+              <button type="button" class="tfa-back-btn" @click="cancel2FA" :disabled="loading">
+                返回登录
               </button>
             </div>
-          </div>
-          
-          <div class="form-options">
-            <label class="ios-toggle-wrapper">
-              <input v-model="form.rememberMe" type="checkbox" class="ios-toggle-input" :disabled="loading">
-              <span class="ios-toggle-slider"></span>
-              <span class="toggle-label">记住我</span>
-            </label>
-          </div>
-          
-          <button
-            type="submit"
-            class="ios-btn ios-btn-primary btn-login"
-            :disabled="loading || !isValid"
-          >
-            <span v-if="loading" class="ios-spinner"></span>
-            <span>{{ loading ? '登录中...' : '登录' }}</span>
-          </button>
+          </template>
         </form>
         
         <Transition name="ios-fade">
@@ -133,7 +176,11 @@ export default {
       },
       showPassword: false,
       loading: false,
-      error: null
+      error: null,
+      // 2FA相关
+      twoFactorRequired: false,
+      tempToken: null,
+      tfaCode: ['', '', '', '', '', '']
     }
   },
   computed: {
@@ -143,6 +190,11 @@ export default {
   },
   methods: {
     async handleLogin() {
+      if (this.twoFactorRequired) {
+        await this.handle2FAVerify()
+        return
+      }
+
       if (!this.isValid) return
       this.loading = true
       this.error = null
@@ -153,6 +205,15 @@ export default {
         })
         if (result.success) {
           this.$store.commit('setCurrentPage', 'dashboard')
+        } else if (result.twoFactorRequired) {
+          // 需要2FA验证
+          this.tempToken = result.tempToken
+          this.twoFactorRequired = true
+          this.tfaCode = ['', '', '', '', '', '']
+          this.$nextTick(() => {
+            const firstInput = this.$refs.tfaInput1
+            if (firstInput) firstInput[0].focus()
+          })
         } else {
           this.error = result.message || '登录失败，请检查用户名和密码'
         }
@@ -160,6 +221,69 @@ export default {
         this.error = err.message || '登录失败，请稍后重试'
       } finally {
         this.loading = false
+      }
+    },
+
+    async handle2FAVerify() {
+      const code = this.tfaCode.join('')
+      if (code.length !== 6) return
+
+      this.loading = true
+      this.error = null
+      try {
+        const result = await this.$store.dispatch('verify2FA', {
+          tempToken: this.tempToken,
+          verificationCode: code
+        })
+        if (result.success) {
+          this.$store.commit('setCurrentPage', 'dashboard')
+        } else {
+          this.error = result.message || '验证码错误'
+          this.tfaCode = ['', '', '', '', '', '']
+          this.$nextTick(() => {
+            const firstInput = this.$refs.tfaInput1
+            if (firstInput) firstInput[0].focus()
+          })
+        }
+      } catch (err) {
+        this.error = err.message || '验证失败，请稍后重试'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    cancel2FA() {
+      this.twoFactorRequired = false
+      this.tempToken = null
+      this.tfaCode = ['', '', '', '', '', '']
+      this.error = null
+    },
+
+    onTfaInput(index, event) {
+      const value = event.target.value.replace(/\D/g, '')
+      this.tfaCode[index - 1] = value
+      if (value && index < 6) {
+        const nextInput = this.$refs['tfaInput' + (index + 1)]
+        if (nextInput) nextInput[0].focus()
+      }
+    },
+
+    onTfaDelete(index, event) {
+      if (!this.tfaCode[index - 1] && index > 1) {
+        const prevInput = this.$refs['tfaInput' + (index - 1)]
+        if (prevInput) prevInput[0].focus()
+      }
+    },
+
+    onTfaPaste(event) {
+      event.preventDefault()
+      const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6)
+      for (let i = 0; i < 6; i++) {
+        this.tfaCode[i] = pasted[i] || ''
+      }
+      if (pasted.length === 6) {
+        const lastInput = this.$refs.tfaInput6
+        if (lastInput) lastInput[0].focus()
       }
     }
   }
@@ -169,6 +293,7 @@ export default {
 <style scoped>
 .ios-login-page {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -176,6 +301,11 @@ export default {
   overflow: hidden;
   background: var(--ios-bg-base);
   transition: var(--ios-theme-transition);
+  /* Safe area: 适配状态栏与 Home Indicator */
+  padding-top: var(--ios-safe-area-top);
+  padding-bottom: var(--ios-safe-area-bottom);
+  padding-left: var(--ios-safe-area-left);
+  padding-right: var(--ios-safe-area-right);
 }
 
 .login-background {
@@ -513,6 +643,82 @@ export default {
   .orb-1, .orb-2 {
     display: none;
   }
+
+  .tfa-code-input {
+    width: 38px;
+    height: 46px;
+  }
+}
+
+/* 极小屏幕：进一步紧凑 2FA 输入框 */
+@media (max-width: 360px) {
+  .login-card {
+    padding: var(--ios-space-5);
+  }
+
+  .login-title {
+    font-size: var(--ios-text-title2);
+  }
+
+  .tfa-code-input {
+    width: 34px;
+    height: 42px;
+    font-size: var(--ios-text-body);
+  }
+
+  .tfa-code-container {
+    gap: var(--ios-space-1);
+  }
+}
+
+/* 横屏手机：紧凑布局 */
+@media (max-height: 480px) and (orientation: landscape) and (max-width: 900px) {
+  .ios-login-page {
+    align-items: flex-start;
+    overflow-y: auto;
+  }
+
+  .login-container {
+    padding: var(--ios-space-3);
+    max-width: 360px;
+  }
+
+  .login-card {
+    padding: var(--ios-space-5);
+  }
+
+  .login-header {
+    margin-bottom: var(--ios-space-4);
+  }
+
+  .logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .logo svg {
+    width: 36px;
+    height: 36px;
+  }
+
+  .login-title {
+    font-size: var(--ios-text-title2);
+  }
+
+  .login-footer {
+    margin-top: var(--ios-space-4);
+    padding-top: var(--ios-space-3);
+  }
+
+  .tfa-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .tfa-icon svg {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 /* GPU 加速 */
@@ -529,6 +735,102 @@ export default {
 
   .login-card {
     animation: none !important;
+  }
+}
+
+/* 2FA验证码样式 */
+.tfa-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--ios-space-5);
+}
+
+.tfa-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--ios-radius-2xl);
+  background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.1));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tfa-icon svg {
+  width: 36px;
+  height: 36px;
+  color: var(--ios-blue);
+}
+
+.tfa-hint {
+  font-size: var(--ios-text-subhead);
+  color: var(--ios-label-secondary);
+  text-align: center;
+  margin: 0;
+}
+
+.tfa-code-container {
+  display: flex;
+  gap: var(--ios-space-2);
+  justify-content: center;
+}
+
+.tfa-code-input {
+  width: 44px;
+  height: 52px;
+  text-align: center;
+  font-size: var(--ios-text-headline);
+  font-weight: var(--ios-weight-bold);
+  color: var(--ios-label-primary);
+  background: var(--ios-fill-quaternary);
+  border: 2px solid transparent;
+  border-radius: var(--ios-radius-lg);
+  outline: none;
+  transition: all var(--ios-transition-fast);
+}
+
+.tfa-code-input:focus {
+  border-color: var(--ios-blue);
+  background: var(--ios-fill-tertiary);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.15);
+}
+
+/* 移动端输入框：防止 iOS 聚焦时自动缩放 */
+@media (max-width: 768px) {
+  .tfa-code-input,
+  .form-input {
+    font-size: 16px;
+  }
+
+  .tfa-code-input {
+    font-size: var(--ios-text-body);
+  }
+}
+
+.tfa-back-btn {
+  background: none;
+  border: none;
+  color: var(--ios-label-secondary);
+  font-size: var(--ios-text-caption1);
+  cursor: pointer;
+  padding: var(--ios-space-2);
+  transition: color var(--ios-transition-fast);
+}
+
+.tfa-back-btn:hover {
+  color: var(--ios-label-primary);
+}
+
+/* 触屏：增大触摸目标 */
+@media (hover: none) and (pointer: coarse) {
+  .password-toggle {
+    width: 44px;
+    height: 44px;
+  }
+
+  .tfa-back-btn {
+    min-height: var(--ios-touch-target-min);
+    padding: var(--ios-space-3);
   }
 }
 </style>

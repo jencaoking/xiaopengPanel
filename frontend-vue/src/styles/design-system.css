@@ -96,6 +96,16 @@
   --ios-sidebar-collapsed-width: 72px;
   --ios-header-height: 56px;
 
+  /* Safe Area Insets (iPhone X+ notch & home indicator) */
+  --ios-safe-area-top: env(safe-area-inset-top, 0px);
+  --ios-safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --ios-safe-area-left: env(safe-area-inset-left, 0px);
+  --ios-safe-area-right: env(safe-area-inset-right, 0px);
+
+  /* Touch Target Sizes (iOS HIG minimum 44px) */
+  --ios-touch-target-min: 44px;
+  --ios-touch-target-comfortable: 48px;
+
   /* Easing Functions */
   --ios-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ios-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -341,8 +351,426 @@
 }
 
 /* ========================================
-   4. Base Reset
+   3.1 Midnight Blue Theme (deep blue dark)
    ======================================== */
+
+[data-theme="midnight"] {
+  color-scheme: dark;
+
+  --ios-bg-primary: #0A0E27;
+  --ios-bg-secondary: #111936;
+  --ios-bg-tertiary: #1A2347;
+  --ios-bg-grouped: #0A0E27;
+  --ios-bg-grouped-secondary: #111936;
+
+  --ios-label-primary: #E8ECF4;
+  --ios-label-secondary: rgba(200, 210, 235, 0.6);
+  --ios-label-tertiary: rgba(200, 210, 235, 0.3);
+  --ios-label-quaternary: rgba(200, 210, 235, 0.18);
+
+  --ios-separator: rgba(80, 100, 160, 0.4);
+  --ios-separator-opaque: #1E2952;
+
+  --ios-fill-primary: rgba(100, 120, 180, 0.36);
+  --ios-fill-secondary: rgba(100, 120, 180, 0.32);
+  --ios-fill-tertiary: rgba(100, 120, 180, 0.24);
+  --ios-fill-quaternary: rgba(100, 120, 180, 0.18);
+
+  --ios-glass-bg: rgba(17, 25, 54, 0.72);
+  --ios-glass-bg-hover: rgba(26, 35, 71, 0.8);
+  --ios-glass-border: rgba(100, 130, 200, 0.15);
+  --ios-glass-border-strong: rgba(100, 130, 200, 0.25);
+  --ios-glass-shadow: 0 8px 32px rgba(5, 10, 30, 0.5);
+  --ios-glass-highlight: rgba(100, 130, 200, 0.06);
+
+  --ios-sidebar-bg: rgba(10, 14, 39, 0.88);
+  --ios-sidebar-border: rgba(100, 130, 200, 0.1);
+
+  --ios-card-bg: rgba(17, 25, 54, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(5, 10, 30, 0.3), 0 8px 32px rgba(5, 10, 30, 0.4);
+  --ios-card-hover-shadow: 0 4px 16px rgba(5, 10, 30, 0.35), 0 12px 40px rgba(5, 10, 30, 0.45);
+
+  --ios-shadow-xs: 0 1px 2px rgba(5, 10, 30, 0.3);
+  --ios-shadow-sm: 0 2px 8px rgba(5, 10, 30, 0.35);
+  --ios-shadow-md: 0 4px 16px rgba(5, 10, 30, 0.4);
+  --ios-shadow-lg: 0 8px 32px rgba(5, 10, 30, 0.45);
+  --ios-shadow-xl: 0 16px 48px rgba(5, 10, 30, 0.5);
+  --ios-shadow-2xl: 0 24px 64px rgba(5, 10, 30, 0.6);
+
+  --ios-shadow-inset: inset 0 1px 2px rgba(5, 10, 30, 0.4);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(5, 10, 30, 0.5);
+
+  --ios-bg-orb-1: rgba(0, 122, 255, 0.15);
+  --ios-bg-orb-2: rgba(88, 86, 214, 0.12);
+  --ios-bg-orb-3: rgba(90, 200, 250, 0.10);
+  --ios-bg-base: #0A0E27;
+
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
+
+/* ========================================
+   3.2 Sunset Theme (warm orange/pink dark)
+   ======================================== */
+
+[data-theme="sunset"] {
+  color-scheme: dark;
+
+  --ios-bg-primary: #1A0F0A;
+  --ios-bg-secondary: #2A1810;
+  --ios-bg-tertiary: #3A2418;
+  --ios-bg-grouped: #1A0F0A;
+  --ios-bg-grouped-secondary: #2A1810;
+
+  --ios-label-primary: #FFF5E8;
+  --ios-label-secondary: rgba(255, 220, 180, 0.6);
+  --ios-label-tertiary: rgba(255, 220, 180, 0.3);
+  --ios-label-quaternary: rgba(255, 220, 180, 0.18);
+
+  --ios-separator: rgba(180, 100, 50, 0.4);
+  --ios-separator-opaque: #4A2E1E;
+
+  --ios-fill-primary: rgba(180, 110, 60, 0.36);
+  --ios-fill-secondary: rgba(180, 110, 60, 0.32);
+  --ios-fill-tertiary: rgba(180, 110, 60, 0.24);
+  --ios-fill-quaternary: rgba(180, 110, 60, 0.18);
+
+  --ios-glass-bg: rgba(42, 24, 16, 0.72);
+  --ios-glass-bg-hover: rgba(58, 36, 24, 0.8);
+  --ios-glass-border: rgba(255, 149, 0, 0.15);
+  --ios-glass-border-strong: rgba(255, 149, 0, 0.25);
+  --ios-glass-shadow: 0 8px 32px rgba(20, 8, 0, 0.5);
+  --ios-glass-highlight: rgba(255, 149, 0, 0.06);
+
+  --ios-sidebar-bg: rgba(26, 15, 10, 0.88);
+  --ios-sidebar-border: rgba(255, 149, 0, 0.1);
+
+  --ios-card-bg: rgba(42, 24, 16, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(20, 8, 0, 0.3), 0 8px 32px rgba(20, 8, 0, 0.4);
+  --ios-card-hover-shadow: 0 4px 16px rgba(20, 8, 0, 0.35), 0 12px 40px rgba(20, 8, 0, 0.45);
+
+  --ios-shadow-xs: 0 1px 2px rgba(20, 8, 0, 0.3);
+  --ios-shadow-sm: 0 2px 8px rgba(20, 8, 0, 0.35);
+  --ios-shadow-md: 0 4px 16px rgba(20, 8, 0, 0.4);
+  --ios-shadow-lg: 0 8px 32px rgba(20, 8, 0, 0.45);
+  --ios-shadow-xl: 0 16px 48px rgba(20, 8, 0, 0.5);
+  --ios-shadow-2xl: 0 24px 64px rgba(20, 8, 0, 0.6);
+
+  --ios-shadow-inset: inset 0 1px 2px rgba(20, 8, 0, 0.4);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(20, 8, 0, 0.5);
+
+  --ios-bg-orb-1: rgba(255, 149, 0, 0.12);
+  --ios-bg-orb-2: rgba(255, 45, 85, 0.10);
+  --ios-bg-orb-3: rgba(255, 204, 0, 0.08);
+  --ios-bg-base: #1A0F0A;
+
+  --ios-blue: #FF9500;
+
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
+
+/* ========================================
+   3.3 Ocean Theme (teal/cyan dark)
+   ======================================== */
+
+[data-theme="ocean"] {
+  color-scheme: dark;
+
+  --ios-bg-primary: #041824;
+  --ios-bg-secondary: #0A2535;
+  --ios-bg-tertiary: #103248;
+  --ios-bg-grouped: #041824;
+  --ios-bg-grouped-secondary: #0A2535;
+
+  --ios-label-primary: #E0F4FA;
+  --ios-label-secondary: rgba(180, 230, 245, 0.6);
+  --ios-label-tertiary: rgba(180, 230, 245, 0.3);
+  --ios-label-quaternary: rgba(180, 230, 245, 0.18);
+
+  --ios-separator: rgba(50, 130, 170, 0.4);
+  --ios-separator-opaque: #14425C;
+
+  --ios-fill-primary: rgba(50, 140, 180, 0.36);
+  --ios-fill-secondary: rgba(50, 140, 180, 0.32);
+  --ios-fill-tertiary: rgba(50, 140, 180, 0.24);
+  --ios-fill-quaternary: rgba(50, 140, 180, 0.18);
+
+  --ios-glass-bg: rgba(10, 37, 53, 0.72);
+  --ios-glass-bg-hover: rgba(16, 50, 72, 0.8);
+  --ios-glass-border: rgba(90, 200, 250, 0.15);
+  --ios-glass-border-strong: rgba(90, 200, 250, 0.25);
+  --ios-glass-shadow: 0 8px 32px rgba(0, 15, 25, 0.5);
+  --ios-glass-highlight: rgba(90, 200, 250, 0.06);
+
+  --ios-sidebar-bg: rgba(4, 24, 36, 0.88);
+  --ios-sidebar-border: rgba(90, 200, 250, 0.1);
+
+  --ios-card-bg: rgba(10, 37, 53, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(0, 15, 25, 0.3), 0 8px 32px rgba(0, 15, 25, 0.4);
+  --ios-card-hover-shadow: 0 4px 16px rgba(0, 15, 25, 0.35), 0 12px 40px rgba(0, 15, 25, 0.45);
+
+  --ios-shadow-xs: 0 1px 2px rgba(0, 15, 25, 0.3);
+  --ios-shadow-sm: 0 2px 8px rgba(0, 15, 25, 0.35);
+  --ios-shadow-md: 0 4px 16px rgba(0, 15, 25, 0.4);
+  --ios-shadow-lg: 0 8px 32px rgba(0, 15, 25, 0.45);
+  --ios-shadow-xl: 0 16px 48px rgba(0, 15, 25, 0.5);
+  --ios-shadow-2xl: 0 24px 64px rgba(0, 15, 25, 0.6);
+
+  --ios-shadow-inset: inset 0 1px 2px rgba(0, 15, 25, 0.4);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(0, 15, 25, 0.5);
+
+  --ios-bg-orb-1: rgba(90, 200, 250, 0.14);
+  --ios-bg-orb-2: rgba(0, 199, 190, 0.10);
+  --ios-bg-orb-3: rgba(48, 209, 88, 0.06);
+  --ios-bg-base: #041824;
+
+  --ios-blue: #5AC8FA;
+
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
+
+/* ========================================
+   3.4 Forest Theme (green dark)
+   ======================================== */
+
+[data-theme="forest"] {
+  color-scheme: dark;
+
+  --ios-bg-primary: #081511;
+  --ios-bg-secondary: #0F2019;
+  --ios-bg-tertiary: #162B22;
+  --ios-bg-grouped: #081511;
+  --ios-bg-grouped-secondary: #0F2019;
+
+  --ios-label-primary: #E4F5EC;
+  --ios-label-secondary: rgba(180, 230, 200, 0.6);
+  --ios-label-tertiary: rgba(180, 230, 200, 0.3);
+  --ios-label-quaternary: rgba(180, 230, 200, 0.18);
+
+  --ios-separator: rgba(50, 140, 90, 0.4);
+  --ios-separator-opaque: #1A3A2C;
+
+  --ios-fill-primary: rgba(50, 150, 100, 0.36);
+  --ios-fill-secondary: rgba(50, 150, 100, 0.32);
+  --ios-fill-tertiary: rgba(50, 150, 100, 0.24);
+  --ios-fill-quaternary: rgba(50, 150, 100, 0.18);
+
+  --ios-glass-bg: rgba(15, 32, 25, 0.72);
+  --ios-glass-bg-hover: rgba(22, 43, 34, 0.8);
+  --ios-glass-border: rgba(52, 199, 89, 0.15);
+  --ios-glass-border-strong: rgba(52, 199, 89, 0.25);
+  --ios-glass-shadow: 0 8px 32px rgba(0, 15, 8, 0.5);
+  --ios-glass-highlight: rgba(52, 199, 89, 0.06);
+
+  --ios-sidebar-bg: rgba(8, 21, 17, 0.88);
+  --ios-sidebar-border: rgba(52, 199, 89, 0.1);
+
+  --ios-card-bg: rgba(15, 32, 25, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(0, 15, 8, 0.3), 0 8px 32px rgba(0, 15, 8, 0.4);
+  --ios-card-hover-shadow: 0 4px 16px rgba(0, 15, 8, 0.35), 0 12px 40px rgba(0, 15, 8, 0.45);
+
+  --ios-shadow-xs: 0 1px 2px rgba(0, 15, 8, 0.3);
+  --ios-shadow-sm: 0 2px 8px rgba(0, 15, 8, 0.35);
+  --ios-shadow-md: 0 4px 16px rgba(0, 15, 8, 0.4);
+  --ios-shadow-lg: 0 8px 32px rgba(0, 15, 8, 0.45);
+  --ios-shadow-xl: 0 16px 48px rgba(0, 15, 8, 0.5);
+  --ios-shadow-2xl: 0 24px 64px rgba(0, 15, 8, 0.6);
+
+  --ios-shadow-inset: inset 0 1px 2px rgba(0, 15, 8, 0.4);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(0, 15, 8, 0.5);
+
+  --ios-bg-orb-1: rgba(52, 199, 89, 0.12);
+  --ios-bg-orb-2: rgba(48, 209, 88, 0.08);
+  --ios-bg-orb-3: rgba(175, 82, 222, 0.06);
+  --ios-bg-base: #081511;
+
+  --ios-blue: #34C759;
+
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
+
+/* ========================================
+   3.5 Rose Theme (pink/magenta dark)
+   ======================================== */
+
+[data-theme="rose"] {
+  color-scheme: dark;
+
+  --ios-bg-primary: #1A0815;
+  --ios-bg-secondary: #2A1020;
+  --ios-bg-tertiary: #3A1828;
+  --ios-bg-grouped: #1A0815;
+  --ios-bg-grouped-secondary: #2A1020;
+
+  --ios-label-primary: #FDE8F2;
+  --ios-label-secondary: rgba(255, 200, 225, 0.6);
+  --ios-label-tertiary: rgba(255, 200, 225, 0.3);
+  --ios-label-quaternary: rgba(255, 200, 225, 0.18);
+
+  --ios-separator: rgba(180, 50, 110, 0.4);
+  --ios-separator-opaque: #4A1E38;
+
+  --ios-fill-primary: rgba(180, 60, 120, 0.36);
+  --ios-fill-secondary: rgba(180, 60, 120, 0.32);
+  --ios-fill-tertiary: rgba(180, 60, 120, 0.24);
+  --ios-fill-quaternary: rgba(180, 60, 120, 0.18);
+
+  --ios-glass-bg: rgba(42, 16, 32, 0.72);
+  --ios-glass-bg-hover: rgba(58, 24, 40, 0.8);
+  --ios-glass-border: rgba(255, 45, 85, 0.15);
+  --ios-glass-border-strong: rgba(255, 45, 85, 0.25);
+  --ios-glass-shadow: 0 8px 32px rgba(15, 0, 8, 0.5);
+  --ios-glass-highlight: rgba(255, 45, 85, 0.06);
+
+  --ios-sidebar-bg: rgba(26, 8, 21, 0.88);
+  --ios-sidebar-border: rgba(255, 45, 85, 0.1);
+
+  --ios-card-bg: rgba(42, 16, 32, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(15, 0, 8, 0.3), 0 8px 32px rgba(15, 0, 8, 0.4);
+  --ios-card-hover-shadow: 0 4px 16px rgba(15, 0, 8, 0.35), 0 12px 40px rgba(15, 0, 8, 0.45);
+
+  --ios-shadow-xs: 0 1px 2px rgba(15, 0, 8, 0.3);
+  --ios-shadow-sm: 0 2px 8px rgba(15, 0, 8, 0.35);
+  --ios-shadow-md: 0 4px 16px rgba(15, 0, 8, 0.4);
+  --ios-shadow-lg: 0 8px 32px rgba(15, 0, 8, 0.45);
+  --ios-shadow-xl: 0 16px 48px rgba(15, 0, 8, 0.5);
+  --ios-shadow-2xl: 0 24px 64px rgba(15, 0, 8, 0.6);
+
+  --ios-shadow-inset: inset 0 1px 2px rgba(15, 0, 8, 0.4);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(15, 0, 8, 0.5);
+
+  --ios-bg-orb-1: rgba(255, 45, 85, 0.12);
+  --ios-bg-orb-2: rgba(175, 82, 222, 0.10);
+  --ios-bg-orb-3: rgba(255, 204, 0, 0.06);
+  --ios-bg-base: #1A0815;
+
+  --ios-blue: #FF2D55;
+
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
+
+/* ========================================
+   3.6 Carbon Theme (neutral gray dark)
+   ======================================== */
+
+[data-theme="carbon"] {
+  color-scheme: dark;
+
+  --ios-bg-primary: #0D0D0D;
+  --ios-bg-secondary: #1A1A1A;
+  --ios-bg-tertiary: #262626;
+  --ios-bg-grouped: #0D0D0D;
+  --ios-bg-grouped-secondary: #1A1A1A;
+
+  --ios-label-primary: #F0F0F0;
+  --ios-label-secondary: rgba(220, 220, 220, 0.6);
+  --ios-label-tertiary: rgba(220, 220, 220, 0.3);
+  --ios-label-quaternary: rgba(220, 220, 220, 0.18);
+
+  --ios-separator: rgba(100, 100, 100, 0.45);
+  --ios-separator-opaque: #333333;
+
+  --ios-fill-primary: rgba(110, 110, 110, 0.36);
+  --ios-fill-secondary: rgba(110, 110, 110, 0.32);
+  --ios-fill-tertiary: rgba(110, 110, 110, 0.24);
+  --ios-fill-quaternary: rgba(110, 110, 110, 0.18);
+
+  --ios-glass-bg: rgba(26, 26, 26, 0.72);
+  --ios-glass-bg-hover: rgba(38, 38, 38, 0.8);
+  --ios-glass-border: rgba(160, 160, 160, 0.12);
+  --ios-glass-border-strong: rgba(160, 160, 160, 0.2);
+  --ios-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+  --ios-glass-highlight: rgba(160, 160, 160, 0.05);
+
+  --ios-sidebar-bg: rgba(13, 13, 13, 0.88);
+  --ios-sidebar-border: rgba(160, 160, 160, 0.08);
+
+  --ios-card-bg: rgba(26, 26, 26, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.25), 0 8px 32px rgba(0, 0, 0, 0.35);
+  --ios-card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.3), 0 12px 40px rgba(0, 0, 0, 0.4);
+
+  --ios-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --ios-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --ios-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.35);
+  --ios-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --ios-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.45);
+  --ios-shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  --ios-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+
+  --ios-bg-orb-1: rgba(142, 142, 147, 0.10);
+  --ios-bg-orb-2: rgba(100, 100, 100, 0.06);
+  --ios-bg-orb-3: rgba(72, 72, 74, 0.04);
+  --ios-bg-base: #0D0D0D;
+
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
 
 *,
 *::before,
@@ -358,6 +786,9 @@ html {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   scroll-behavior: smooth;
+  /* Prevent iOS text size adjustment on orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -369,9 +800,81 @@ body {
   color: var(--ios-label-primary);
   background-color: var(--ios-bg-base);
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
   /* Smooth theme transition */
   transition: var(--ios-theme-transition);
+  /* Safe area padding for iPhone X+ notch & home indicator */
+  padding-top: var(--ios-safe-area-top);
+  padding-bottom: var(--ios-safe-area-bottom);
+  padding-left: var(--ios-safe-area-left);
+  padding-right: var(--ios-safe-area-right);
+  /* Disable overscroll bounce on iOS (except where needed) */
+  overscroll-behavior-y: none;
+}
+
+/* ========================================
+   4.1 Mobile Touch Optimization
+   ======================================== */
+
+/* Remove default tap highlight color (iOS) */
+* {
+  -webkit-tap-highlight-color: transparent;
+  tap-highlight-color: transparent;
+}
+
+/* Disable callout menu on long press (except for inputs/links) */
+*:not(input):not(textarea):not(a):not(button) {
+  -webkit-touch-callout: none;
+}
+
+/* Allow text selection in form fields and content areas */
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent text selection on UI controls (draggable elements) */
+button, .nav-item, .ios-btn, .btn, .dropdown-item {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Momentum scrolling on touch devices */
+.scroll-touch {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Apply momentum scrolling to common scrollable areas */
+.sidebar-nav,
+.page-content,
+.table-container,
+.ios-modal-body,
+.dropdown-menu {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Safe area helper utilities */
+.safe-area-top {
+  padding-top: var(--ios-safe-area-top) !important;
+}
+.safe-area-bottom {
+  padding-bottom: var(--ios-safe-area-bottom) !important;
+}
+.safe-area-left {
+  padding-left: var(--ios-safe-area-left) !important;
+}
+.safe-area-right {
+  padding-right: var(--ios-safe-area-right) !important;
+}
+.safe-area-inset {
+  padding-top: var(--ios-safe-area-top) !important;
+  padding-bottom: var(--ios-safe-area-bottom) !important;
+  padding-left: var(--ios-safe-area-left) !important;
+  padding-right: var(--ios-safe-area-right) !important;
 }
 
 /* Reduced Motion - Accessibility */
@@ -1278,17 +1781,163 @@ a:hover {
   backface-visibility: hidden;
 }
 
-/* Responsive */
-@media (max-width: 640px) {
-  .sm\:hidden { display: none !important; }
-  .sm\:flex-col { flex-direction: column !important; }
+/* ========================================
+   19. Responsive Breakpoints & Mobile Optimization
+   ======================================== */
+
+/* Tablet and below */
+@media (max-width: 1024px) {
+  .lg\:hidden { display: none !important; }
+
+  /* Reduce glass blur for performance on mid-range devices */
+  .ios-glass,
+  .ios-card,
+  .ios-modal,
+  .ios-toast {
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+  }
 }
 
+/* Mobile */
 @media (max-width: 768px) {
   .md\:hidden { display: none !important; }
   .md\:flex-col { flex-direction: column !important; }
+
+  /* Reduce typography scale slightly on mobile */
+  html {
+    font-size: 15px;
+  }
+
+  /* Modal becomes full-screen sheet on mobile */
+  .ios-modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .ios-modal {
+    max-width: 100%;
+    width: 100%;
+    max-height: 92vh;
+    border-radius: var(--ios-radius-2xl) var(--ios-radius-2xl) 0 0;
+    transform: translateY(100%);
+    transition: transform var(--ios-transition-spring);
+  }
+
+  .ios-modal-overlay.active .ios-modal {
+    transform: translateY(0);
+  }
+
+  /* Larger touch targets on mobile for primary controls */
+  .ios-btn,
+  .btn {
+    min-height: var(--ios-touch-target-min);
+  }
+
+  /* Toast positions above home indicator */
+  .ios-toast {
+    bottom: calc(var(--ios-space-8) + var(--ios-safe-area-bottom));
+    left: var(--ios-space-4);
+    right: var(--ios-space-4);
+    transform: translateY(100px);
+    max-width: none;
+  }
+
+  .ios-toast.show {
+    transform: translateY(0);
+  }
+
+  /* Inputs: prevent iOS auto-zoom by keeping font-size >= 16px */
+  .ios-input,
+  .ios-textarea,
+  .ios-select,
+  .form-group input,
+  .form-group select,
+  .form-group textarea,
+  .search-box input {
+    font-size: 16px;
+  }
 }
 
-@media (max-width: 1024px) {
-  .lg\:hidden { display: none !important; }
+/* Small mobile */
+@media (max-width: 640px) {
+  .sm\:hidden { display: none !important; }
+  .sm\:flex-col { flex-direction: column !important; }
+
+  /* Hide hover-only effects on touch devices to avoid sticky hover state */
+  .ios-card:hover,
+  .card:hover,
+  .stat-card:hover,
+  .glass:hover {
+    transform: none;
+    box-shadow: var(--ios-card-shadow);
+    background: var(--ios-card-bg);
+  }
+
+  /* Tighten spacing on small screens */
+  .page-content {
+    padding: var(--ios-space-3);
+  }
+}
+
+/* Very small mobile */
+@media (max-width: 480px) {
+  /* Force tables to use card-like layout via horizontal scroll fallback */
+  .table-container {
+    margin-left: calc(-1 * var(--ios-space-3));
+    margin-right: calc(-1 * var(--ios-space-3));
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  /* Stat values scale down to fit */
+  .stat-value {
+    font-size: var(--ios-text-title1);
+  }
+}
+
+/* Landscape phone: tighter vertical spacing */
+@media (max-width: 900px) and (orientation: landscape) {
+  .ios-modal-overlay {
+    align-items: center;
+    padding: var(--ios-space-4);
+  }
+
+  .ios-modal {
+    max-height: 88vh;
+    border-radius: var(--ios-radius-2xl);
+    transform: scale(0.9) translateY(20px);
+  }
+
+  .ios-modal-overlay.active .ios-modal {
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Hover-capable devices only: keep hover effects */
+@media (hover: hover) and (pointer: fine) {
+  /* Hover effects remain active - defined elsewhere */
+}
+
+/* Coarse pointer (touch): remove hover transforms to prevent sticky states */
+@media (hover: none) and (pointer: coarse) {
+  .ios-btn:hover:not(:disabled),
+  .btn:hover,
+  .nav-item:hover,
+  .control-btn:hover,
+  .search-toggle:hover,
+  .logout-btn:hover,
+  .ios-list-item:hover {
+    transform: none;
+    background: transparent;
+  }
+
+  /* Show active state instead of hover on touch */
+  .ios-btn:active:not(:disabled),
+  .btn:active,
+  .nav-item:active,
+  .control-btn:active {
+    transform: scale(0.97);
+  }
 }

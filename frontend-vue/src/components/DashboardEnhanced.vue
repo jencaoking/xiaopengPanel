@@ -44,7 +44,7 @@
       >
         <div class="widget-header">
           <h3 class="widget-title">
-            <component :is="getWidgetIcon(widget.id)" class="widget-icon" />
+            <span class="widget-icon">{{ getWidgetIcon(widget.id) }}</span>
             {{ getWidgetTitle(widget.id) }}
           </h3>
           <div class="widget-actions" v-if="editMode">
@@ -62,11 +62,12 @@
           </div>
         </div>
         <div class="widget-content">
-          <component 
-            :is="getWidgetComponent(widget.id)" 
+          <component
+            :is="getWidgetComponent(widget.id)"
             :data="widgetData[widget.id]"
             :time-range="selectedTimeRange"
             @refresh="refreshWidget(widget.id)"
+            @resolve="resolveAlert"
           />
         </div>
         <div class="resize-handle" v-if="editMode" @mousedown.stop="startResize($event, widget)"></div>
@@ -91,9 +92,10 @@
 </template>
 
 <script>
-import { ref, computed, onMounted, onUnmounted, shallowRef, markRaw } from 'vue'
+import { ref, computed, onMounted, onUnmounted, shallowRef, markRaw, watch } from 'vue'
 import { useStore } from 'vuex'
 import { useI18n } from 'vue-i18n'
+import { io } from 'socket.io-client'
 import { Chart, registerables } from 'chart.js'
 
 Chart.register(...registerables)
@@ -106,6 +108,9 @@ import TopProcessesWidget from './widgets/TopProcessesWidget.vue'
 import NetworkChartWidget from './widgets/NetworkChartWidget.vue'
 import DiskIoChartWidget from './widgets/DiskIoChartWidget.vue'
 import HistoryChartWidget from './widgets/HistoryChartWidget.vue'
+import GpuWidget from './widgets/GpuWidget.vue'
+import TemperatureWidget from './widgets/TemperatureWidget.vue'
+import AlertsWidget from './widgets/AlertsWidget.vue'
 
 export default {
   name: 'DashboardEnhanced',
@@ -117,7 +122,10 @@ export default {
     TopProcessesWidget,
     NetworkChartWidget,
     DiskIoChartWidget,
-    HistoryChartWidget
+    HistoryChartWidget,
+    GpuWidget,
+    TemperatureWidget,
+    AlertsWidget
   },
   setup() {
     const store = useStore()
@@ -148,9 +156,12 @@ export default {
       top_processes: 'TopProcessesWidget',
       network_chart: 'NetworkChartWidget',
       disk_io_chart: 'DiskIoChartWidget',
-      history_chart: 'HistoryChartWidget'
+      history_chart: 'HistoryChartWidget',
+      gpu: 'GpuWidget',
+      temperature: 'TemperatureWidget',
+      alerts: 'AlertsWidget'
     }
-    
+
     const widgetTitles = computed(() => ({
       cpu: 'CPU',
       memory: t('common.memoryUsage'),
@@ -159,9 +170,12 @@ export default {
       top_processes: t('dashboard.topProcesses'),
       network_chart: t('dashboard.networkChart'),
       disk_io_chart: t('dashboard.diskIoChart'),
-      history_chart: t('dashboard.historyChart')
+      history_chart: t('dashboard.historyChart'),
+      gpu: 'GPU',
+      temperature: t('dashboard.temperature'),
+      alerts: t('dashboard.alerts')
     }))
-    
+
     const availableWidgetTypes = computed(() => {
       const existingIds = widgets.value.map(w => w.id)
       return [
@@ -172,13 +186,17 @@ export default {
         { id: 'top_processes', title: t('dashboard.topProcesses'), icon: 'ProcessIcon' },
         { id: 'network_chart', title: t('dashboard.networkChart'), icon: 'ChartIcon' },
         { id: 'disk_io_chart', title: t('dashboard.diskIoChart'), icon: 'ChartIcon' },
-        { id: 'history_chart', title: t('dashboard.historyChart'), icon: 'ChartIcon' }
+        { id: 'history_chart', title: t('dashboard.historyChart'), icon: 'ChartIcon' },
+        { id: 'gpu', title: 'GPU', icon: 'GpuIcon' },
+        { id: 'temperature', title: t('dashboard.temperature'), icon: 'TempIcon' },
+        { id: 'alerts', title: t('dashboard.alerts'), icon: 'AlertIcon' }
       ].filter(w => !existingIds.includes(w.id))
     })
     
     const visibleWidgets = computed(() => widgets.value.filter(w => w.visible))
     
     let updateInterval = null
+    let staticInterval = null
     let timeInterval = null
     
     const updateTime = () => {
@@ -232,9 +250,10 @@ export default {
       { id: 'memory', x: 6, y: 0, w: 6, h: 4, visible: true },
       { id: 'disk', x: 0, y: 4, w: 6, h: 4, visible: true },
       { id: 'network', x: 6, y: 4, w: 6, h: 4, visible: true },
-      { id: 'top_processes', x: 0, y: 8, w: 12, h: 6, visible: true },
-      { id: 'network_chart', x: 0, y: 14, w: 6, h: 5, visible: true },
-      { id: 'disk_io_chart', x: 6, y: 14, w: 6, h: 5, visible: true }
+      { id: 'alerts', x: 0, y: 8, w: 12, h: 4, visible: true },
+      { id: 'top_processes', x: 0, y: 12, w: 12, h: 6, visible: true },
+      { id: 'network_chart', x: 0, y: 18, w: 6, h: 5, visible: true },
+      { id: 'disk_io_chart', x: 6, y: 18, w: 6, h: 5, visible: true }
     ]
     
     const getWidgetStyle = (widget) => {
@@ -260,7 +279,20 @@ export default {
     }
     
     const getWidgetIcon = (widgetId) => {
-      return 'div'
+      const icons = {
+        cpu: '📊',
+        memory: '💾',
+        disk: '💿',
+        network: '🌐',
+        top_processes: '⚙️',
+        network_chart: '📈',
+        disk_io_chart: '📉',
+        history_chart: '📋',
+        gpu: '🎮',
+        temperature: '🌡️',
+        alerts: '🔔'
+      }
+      return icons[widgetId] || '📊'
     }
     
     const toggleEditMode = () => {
@@ -383,52 +415,167 @@ export default {
       document.removeEventListener('mouseup', stopResize)
     }
     
-    const fetchAllData = async () => {
+    const applyRealtimeMetrics = (realtime) => {
+      if (!realtime) return
+      const prev = widgetData.value
+      widgetData.value = {
+        ...prev,
+        cpu: realtime.cpu,
+        memory: realtime.memory,
+        disk: realtime.disk_io,
+        network: realtime.network,
+        gpu: { available: (realtime.gpu && realtime.gpu.length > 0) || false, devices: realtime.gpu || [] },
+        temperature: { available: (realtime.temperature && realtime.temperature.length > 0) || false, sensors: realtime.temperature || [] },
+        history_chart: {
+          cpu: realtime.cpu,
+          memory: realtime.memory
+        }
+      }
+    }
+
+    const fetchRealtimeOnce = async () => {
       const token = store.state.token
-      
       try {
-        const [realtimeRes, topProcessesRes, networkHistoryRes, diskIoHistoryRes] = await Promise.all([
-          fetch('/api/monitor/realtime', { headers: { 'Authorization': `Bearer ${token}` } }),
+        const res = await fetch('/api/monitor/realtime', { headers: { 'Authorization': `Bearer ${token}` } })
+        const realtime = await res.json()
+        applyRealtimeMetrics(realtime)
+      } catch (error) {
+        console.error('Failed to fetch realtime metrics:', error)
+      }
+    }
+
+    const fetchStaticData = async () => {
+      const token = store.state.token
+      try {
+        const [topProcessesRes, networkHistoryRes, diskIoHistoryRes] = await Promise.all([
           fetch('/api/monitor/top-processes?limit=10', { headers: { 'Authorization': `Bearer ${token}` } }),
           fetch(`/api/monitor/network/traffic/history?time_range=${selectedTimeRange.value}`, { headers: { 'Authorization': `Bearer ${token}` } }),
           fetch(`/api/monitor/disk-io/history?time_range=${selectedTimeRange.value}`, { headers: { 'Authorization': `Bearer ${token}` } })
         ])
-        
-        const realtime = await realtimeRes.json()
+
         const topProcesses = await topProcessesRes.json()
         const networkHistory = await networkHistoryRes.json()
         const diskIoHistory = await diskIoHistoryRes.json()
-        
+
         widgetData.value = {
-          cpu: realtime.cpu,
-          memory: realtime.memory,
-          disk: realtime.disk_io,
-          network: realtime.network,
+          ...widgetData.value,
           top_processes: topProcesses,
           network_chart: networkHistory,
-          disk_io_chart: diskIoHistory,
-          history_chart: {
-            cpu: realtime.cpu,
-            memory: realtime.memory
-          }
+          disk_io_chart: diskIoHistory
         }
       } catch (error) {
-        console.error('Failed to fetch data:', error)
+        console.error('Failed to fetch static data:', error)
       }
     }
-    
-    const refreshWidget = async (widgetId) => {
-      await fetchAllData()
+
+    const fetchAlerts = async () => {
+      const token = store.state.token
+      try {
+        const res = await fetch('/api/monitor/alerts?limit=100', { headers: { 'Authorization': `Bearer ${token}` } })
+        const data = await res.json()
+        const alerts = data.alerts || []
+        widgetData.value = {
+          ...widgetData.value,
+          alerts: { alerts, active_count: alerts.filter(a => a.status === 'active').length }
+        }
+      } catch (error) {
+        console.error('Failed to fetch alerts:', error)
+      }
     }
-    
+
+    const resolveAlert = async (alertId) => {
+      const token = store.state.token
+      try {
+        await fetch(`/api/monitor/alerts/${alertId}/resolve`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        await fetchAlerts()
+      } catch (error) {
+        console.error('Failed to resolve alert:', error)
+      }
+    }
+
+    let monitorSocket = null
+    let socketConnected = false
+
+    const initMonitorSocket = () => {
+      const token = store.state.token
+      if (!token) return
+
+      try {
+        monitorSocket = io('/monitor', {
+          path: '/socket.io',
+          transports: ['websocket', 'polling'],
+          query: { auth: token },
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 2000
+        })
+
+        monitorSocket.on('connect', () => {
+          socketConnected = true
+          monitorSocket.emit('subscribe', { channel: 'realtime' })
+        })
+
+        monitorSocket.on('realtime_metrics', (data) => {
+          applyRealtimeMetrics(data)
+        })
+
+        monitorSocket.on('alerts_update', (data) => {
+          widgetData.value = {
+            ...widgetData.value,
+            alerts: { alerts: data.alerts || [], active_count: data.active_count || 0 }
+          }
+        })
+
+        monitorSocket.on('alert_triggered', () => {
+          fetchAlerts()
+        })
+
+        monitorSocket.on('alert_resolved', () => {
+          fetchAlerts()
+        })
+
+        monitorSocket.on('connect_error', () => {
+          socketConnected = false
+        })
+
+        monitorSocket.on('disconnect', () => {
+          socketConnected = false
+        })
+      } catch (error) {
+        console.error('Failed to init monitor socket:', error)
+      }
+    }
+
+    const refreshWidget = async (widgetId) => {
+      if (widgetId === 'alerts') {
+        await fetchAlerts()
+      } else if (['network_chart', 'disk_io_chart', 'history_chart'].includes(widgetId)) {
+        await fetchStaticData()
+      } else if (widgetId === 'top_processes') {
+        const token = store.state.token
+        try {
+          const res = await fetch('/api/monitor/top-processes?limit=10', { headers: { 'Authorization': `Bearer ${token}` } })
+          widgetData.value = { ...widgetData.value, top_processes: await res.json() }
+        } catch (error) {
+          console.error('Failed to refresh widget:', error)
+        }
+      } else {
+        await fetchRealtimeOnce()
+      }
+    }
+
     const refreshAllData = async () => {
       isRefreshing.value = true
-      await fetchAllData()
-      setTimeout(() => {
-        isRefreshing.value = false
-      }, 500)
+      try {
+        await Promise.all([fetchRealtimeOnce(), fetchStaticData(), fetchAlerts()])
+      } finally {
+        setTimeout(() => { isRefreshing.value = false }, 500)
+      }
     }
-    
+
     const exportData = async () => {
       try {
         const token = store.state.token
@@ -444,7 +591,7 @@ export default {
             format: 'json'
           })
         })
-        
+
         const data = await response.json()
         const blob = new Blob([JSON.stringify(data.data, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
@@ -457,28 +604,63 @@ export default {
         console.error('Failed to export data:', error)
       }
     }
-    
+
+    const handleResize = () => {
+      if (widgetsContainer.value) {
+        widgetsContainer.value.style.height = 'auto'
+      }
+    }
+
+    // 时间范围切换时重新拉取历史图表数据
+    watch(selectedTimeRange, () => {
+      fetchStaticData()
+    })
+
     onMounted(() => {
       updateTime()
       timeInterval = setInterval(updateTime, 1000)
-      
+
       fetchWidgetLayout()
-      fetchAllData()
-      
-      updateInterval = setInterval(fetchAllData, 5000)
-      
-      window.addEventListener('resize', () => {
-        if (widgetsContainer.value) {
-          widgetsContainer.value.style.height = 'auto'
+      // 首次拉取全量数据（含历史与告警）
+      fetchRealtimeOnce()
+      fetchStaticData()
+      fetchAlerts()
+
+      // 建立 WebSocket 实时推送通道（替代 5s 轮询）
+      initMonitorSocket()
+
+      // 轮询兜底：socket 未连上时用 HTTP 轮询；进程列表与告警按较低频率刷新
+      updateInterval = setInterval(async () => {
+        if (!socketConnected) {
+          await fetchRealtimeOnce()
         }
-      })
+      }, 5000)
+
+      // top processes 不走 socket，独立低频刷新
+      staticInterval = setInterval(async () => {
+        const token = store.state.token
+        try {
+          const res = await fetch('/api/monitor/top-processes?limit=10', { headers: { 'Authorization': `Bearer ${token}` } })
+          widgetData.value = { ...widgetData.value, top_processes: await res.json() }
+        } catch (error) {
+          console.error('Failed to refresh top processes:', error)
+        }
+      }, 5000)
+
+      window.addEventListener('resize', handleResize)
     })
-    
+
     onUnmounted(() => {
       if (updateInterval) clearInterval(updateInterval)
+      if (staticInterval) clearInterval(staticInterval)
       if (timeInterval) clearInterval(timeInterval)
+      if (monitorSocket) {
+        monitorSocket.disconnect()
+        monitorSocket = null
+      }
+      window.removeEventListener('resize', handleResize)
     })
-    
+
     return {
       currentTime,
       isRefreshing,
@@ -502,7 +684,8 @@ export default {
       startResize,
       refreshAllData,
       refreshWidget,
-      exportData
+      exportData,
+      resolveAlert
     }
   }
 }

@@ -71,3 +71,13 @@ update_password_simple.py
 # 重构计划文档
 REWRITE_PLAN.md
 FUNCTION_ANALYSIS.md
+
+# 测试产物
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+tests/__pycache__/
+tests/*/__pycache__/
+frontend-vue/test/coverage/
+frontend-vue/test-results/

@@ -97,11 +97,11 @@ export default {
     const processes = computed(() => {
       const list = [...(props.data || [])]
       if (sortBy.value === 'cpu') {
-        list.sort((a, b) => b.cpu_percent - a.cpu_percent)
+        list.sort((a, b) => (b.cpu_percent || 0) - (a.cpu_percent || 0))
       } else if (sortBy.value === 'memory') {
-        list.sort((a, b) => b.memory_percent - a.memory_percent)
+        list.sort((a, b) => (b.memory_percent || 0) - (a.memory_percent || 0))
       } else if (sortBy.value === 'io') {
-        list.sort((a, b) => (b.io_read_bytes + b.io_write_bytes) - (a.io_read_bytes + a.io_write_bytes))
+        list.sort((a, b) => ((b.io_read_bytes || 0) + (b.io_write_bytes || 0)) - ((a.io_read_bytes || 0) + (a.io_write_bytes || 0)))
       }
       return list.slice(0, 10)
     })
@@ -113,7 +113,7 @@ export default {
     }
     
     const formatBytes = (bytes) => {
-      if (bytes === 0) return '0 B'
+      if (!bytes || bytes <= 0) return '0 B'
       const k = 1024
       const sizes = ['B', 'KB', 'MB', 'GB']
       const i = Math.floor(Math.log(bytes) / Math.log(k))

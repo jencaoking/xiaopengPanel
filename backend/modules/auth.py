@@ -2,10 +2,17 @@ import jwt
 import time
 import bcrypt
 import re
+import threading
 from functools import wraps
 from flask import request, jsonify, g
 from config.config import Config, config_instance
 from modules.log_manager import log_operation, log_system
+from modules import rbac
+
+
+def get_current_user_permissions(role):
+    """获取指定角色用户的权限列表（供其他模块使用）"""
+    return rbac.get_user_permissions(role)
 
 # 密码强度检测
 PASSWORD_PATTERN = {
@@ -146,19 +153,56 @@ def login(data):
         if bcrypt.checkpw(password.encode('utf-8'), Config.USERS[username]['password'].encode('utf-8')):
             # 重置登录尝试次数
             login_attempts[username] = [0, time.time()]
-            
-            # 生成JWT令牌
+
+            # 检查用户是否被禁用
+            from modules.user_manager import is_user_disabled
+            if is_user_disabled(username):
+                log_system(f'Disabled user {username} attempted login from {client_ip}', 'WARN', 'auth')
+                return {
+                    'status': 'error',
+                    'message': '该账户已被禁用，请联系管理员'
+                }, 403
+
+            # 检查是否启用了2FA
+            from modules.totp_manager import get_2fa_status
+            totp_status = get_2fa_status(username)
+            if totp_status.get('enabled'):
+                # 2FA已启用，生成临时令牌供二次验证使用
+                temp_token = jwt.encode(
+                    {
+                        'username': username,
+                        'role': Config.USERS[username]['role'],
+                        'exp': time.time() + 300,  # 5分钟有效期
+                        'iat': time.time(),
+                        'type': '2fa_pending'
+                    },
+                    get_jwt_secret(),
+                    algorithm='HS256'
+                )
+
+                log_system(f'User {username} requires 2FA verification from {client_ip}', 'INFO', 'auth')
+
+                return {
+                    'status': '2fa_required',
+                    'message': '请输入双因素认证验证码',
+                    'temp_token': temp_token
+                }, 200
+
+            # 2FA未启用，直接生成JWT令牌
+            user_role = Config.USERS[username]['role']
+            user_permissions = rbac.get_user_permissions(user_role)
             token = jwt.encode(
                 {
                     'username': username,
-                    'role': Config.USERS[username]['role'],
+                    'role': user_role,
+                    'permissions': user_permissions,
                     'exp': time.time() + JWT_EXPIRE_TIME,
                     'iat': time.time()
                 },
                 get_jwt_secret(),
                 algorithm='HS256'
             )
-            
+
             # 生成刷新令牌
             refresh_token = jwt.encode(
                 {
@@ -170,11 +214,11 @@ def login(data):
                 get_jwt_secret(),
                 algorithm='HS256'
             )
-            
+
             # 记录登录成功日志
             log_operation(username, 'login', client_ip, 'Login successful')
             log_system(f'User {username} logged in from {client_ip}', 'INFO', 'auth')
-            
+
             return {
                 'status': 'success',
                 'message': 'Login successful',
@@ -183,7 +227,8 @@ def login(data):
                 'token_expires_in': JWT_EXPIRE_TIME,
                 'user': {
                     'username': username,
-                    'role': Config.USERS[username]['role']
+                    'role': user_role,
+                    'permissions': user_permissions
                 }
             }
         else:
@@ -232,22 +277,30 @@ def refresh_token(data):
             }, 404
         
         # 生成新的访问令牌
+        user_role = Config.USERS[username]['role']
+        user_permissions = rbac.get_user_permissions(user_role)
         new_token = jwt.encode(
             {
                 'username': username,
-                'role': Config.USERS[username]['role'],
+                'role': user_role,
+                'permissions': user_permissions,
                 'exp': time.time() + JWT_EXPIRE_TIME,
                 'iat': time.time()
             },
             get_jwt_secret(),
             algorithm='HS256'
         )
-        
+
         return {
             'status': 'success',
             'message': 'Token refreshed successfully',
             'token': new_token,
-            'token_expires_in': JWT_EXPIRE_TIME
+            'token_expires_in': JWT_EXPIRE_TIME,
+            'user': {
+                'username': username,
+                'role': user_role,
+                'permissions': user_permissions
+            }
         }
     except jwt.ExpiredSignatureError:
         return {
@@ -279,6 +332,9 @@ def authenticate(f):
         try:
             # 验证JWT令牌
             payload = jwt.decode(token, get_jwt_secret(), algorithms=['HS256'])
+            # 确保权限信息存在（兼容旧令牌：从角色实时加载）
+            if 'permissions' not in payload:
+                payload['permissions'] = rbac.get_user_permissions(payload.get('role'))
             request.user = payload
         except jwt.ExpiredSignatureError:
             return jsonify({
@@ -292,5 +348,103 @@ def authenticate(f):
             }), 401
         
         return f(*args, **kwargs)
-    
+
     return decorated
+
+
+# 2FA登录验证函数
+def verify_2fa_login(data):
+    """验证2FA登录验证码，完成登录"""
+    temp_token = data.get('temp_token')
+    verification_code = data.get('verification_code')
+    client_ip = request.remote_addr
+
+    if not temp_token or not verification_code:
+        return {
+            'status': 'error',
+            'message': '临时令牌和验证码不能为空'
+        }, 400
+
+    try:
+        # 验证临时令牌
+        payload = jwt.decode(temp_token, get_jwt_secret(), algorithms=['HS256'])
+
+        # 检查令牌类型
+        if payload.get('type') != '2fa_pending':
+            return {
+                'status': 'error',
+                'message': '无效的令牌类型'
+            }, 400
+
+        username = payload.get('username')
+
+        # 检查用户是否存在
+        if username not in Config.USERS:
+            return {
+                'status': 'error',
+                'message': 'User not found'
+            }, 404
+
+        # 验证2FA验证码
+        from modules.totp_manager import verify_2fa_login as verify_code
+        if not verify_code(username, verification_code):
+            log_system(f'User {username} failed 2FA verification from {client_ip}', 'WARN', 'auth')
+            return {
+                'status': 'error',
+                'message': '验证码错误'
+            }, 401
+
+        # 2FA验证成功，生成正式JWT令牌
+        user_role = Config.USERS[username]['role']
+        user_permissions = rbac.get_user_permissions(user_role)
+        token = jwt.encode(
+            {
+                'username': username,
+                'role': user_role,
+                'permissions': user_permissions,
+                'exp': time.time() + JWT_EXPIRE_TIME,
+                'iat': time.time()
+            },
+            get_jwt_secret(),
+            algorithm='HS256'
+        )
+
+        # 生成刷新令牌
+        refresh_token = jwt.encode(
+            {
+                'username': username,
+                'exp': time.time() + REFRESH_TOKEN_EXPIRE_TIME,
+                'iat': time.time(),
+                'type': 'refresh'
+            },
+            get_jwt_secret(),
+            algorithm='HS256'
+        )
+
+        # 记录登录成功日志
+        log_operation(username, 'login_2fa', client_ip, 'Login successful with 2FA')
+        log_system(f'User {username} logged in with 2FA from {client_ip}', 'INFO', 'auth')
+
+        return {
+            'status': 'success',
+            'message': 'Login successful',
+            'token': token,
+            'refresh_token': refresh_token,
+            'token_expires_in': JWT_EXPIRE_TIME,
+            'user': {
+                'username': username,
+                'role': user_role,
+                'permissions': user_permissions
+            }
+        }
+
+    except jwt.ExpiredSignatureError:
+        return {
+            'status': 'error',
+            'message': '临时令牌已过期，请重新登录'
+        }, 401
+    except jwt.InvalidTokenError:
+        return {
+            'status': 'error',
+            'message': '无效的临时令牌'
+        }, 401
