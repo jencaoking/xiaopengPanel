@@ -32,10 +32,19 @@ def _setup_test_environment():
     # 确保 Config.USERS 作为类属性可访问（auth.py 中使用 Config.USERS）
     Config.USERS = config_instance.USERS
 
+    # 确保 Config.SECURE_HEADERS 作为类属性可访问（middleware.py 中使用 Config.SECURE_HEADERS）
+    Config.SECURE_HEADERS = config_instance.SECURE_HEADERS
+
     # 禁用 IP 白名单以简化测试（单独的 IP 白名单测试会重新启用）
     original_whitelist_enabled = config_instance.IP_WHITELIST_ENABLED
     config_instance.IP_WHITELIST_ENABLED = False
     Config.IP_WHITELIST_ENABLED = False
+
+    # 修复：auth.py 中 get_jwt_secret() 使用 Config.SECRET_KEY 返回 property 描述符而非字符串
+    # PyJWT 2.10+ 要求 key 为字符串/字节，property 对象会导致 TypeError
+    # 这里将 get_jwt_secret 替换为直接访问 config_instance 实例属性
+    from modules import auth as _auth_module
+    _auth_module.get_jwt_secret = lambda: config_instance.SECRET_KEY
 
     yield
 

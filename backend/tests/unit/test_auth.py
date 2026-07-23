@@ -26,6 +26,13 @@ from modules.auth import (
 from modules import auth
 
 
+def _unpack_login_result(result):
+    """处理 login() 返回值的不一致性：成功时返回 dict，失败时返回 (dict, status)"""
+    if isinstance(result, tuple):
+        return result[0], result[1]
+    return result, 200
+
+
 # ==================== 密码强度校验 ====================
 
 class TestPasswordStrength:
