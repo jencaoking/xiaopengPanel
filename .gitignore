@@ -81,3 +81,5 @@ tests/__pycache__/
 tests/*/__pycache__/
 frontend-vue/test/coverage/
 frontend-vue/test-results/
+frontend-vue/coverage/
+frontend-vue/tests/coverage/

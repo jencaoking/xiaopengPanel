@@ -5,6 +5,7 @@ import App from './App.vue'
 import zhCN from './locales/zh-CN.js'
 import zhTW from './locales/zh-TW.js'
 import enUS from './locales/en-US.js'
+import { hasPermission } from './utils/permissions.js'
 
 // 导入设计系统样式
 import './styles/design-system.css'
@@ -248,22 +249,7 @@ const store = createStore({
      * 支持通配符：'user:*'、'*:view'、'*:manage'
      */
     hasPermission: (state) => (permission) => {
-      if (!permission || !state.permissions || !state.permissions.length) return false
-      const perms = state.permissions
-      // 完全匹配
-      if (perms.includes(permission)) return true
-      // 通配符匹配（支持 user:* / *:view / *:manage / *:*）
-      const [res, act] = permission.split(':')
-      for (const p of perms) {
-        if (p === permission) return true
-        const [pr, pa] = p.split(':')
-        if ((pr === '*' || pr === res) && (pa === '*' || pa === act)) return true
-        // manage 隐含 view/create/update/delete/execute
-        if (pa === 'manage' && ['view', 'create', 'update', 'delete', 'execute'].includes(act) && (pr === '*' || pr === res)) return true
-        // execute/create/update/delete 隐含 view
-        if (['execute', 'create', 'update', 'delete'].includes(pa) && act === 'view' && (pr === '*' || pr === res)) return true
-      }
-      return false
+      return hasPermission(state.permissions, permission)
     }
   }
 })

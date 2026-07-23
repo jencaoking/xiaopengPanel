@@ -41,8 +41,8 @@ class TestIpWhitelistRequired:
     @pytest.mark.unit
     def test_whitelist_disabled_allows_all(self, flask_app, monkeypatch):
         """白名单未启用时应放行所有请求"""
-        monkeypatch.setattr(Config, 'IP_WHITELIST_ENABLED', False)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST_ENABLED', False)
+        # 直接 patch config_instance（中间件实际读取的对象），避免被残留实例属性遮蔽
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST_ENABLED', False)
 
         with flask_app.test_request_context('/', environ_base={'REMOTE_ADDR': '192.168.1.100'}):
             request.user = {'username': 'admin', 'role': 'admin'}
@@ -58,10 +58,8 @@ class TestIpWhitelistRequired:
     def test_whitelist_enabled_ip_in_whitelist(self, flask_app, monkeypatch):
         """白名单启用且 IP 在白名单内时应放行"""
         whitelist = {'admin': ['127.0.0.1', '::1']}
-        monkeypatch.setattr(Config, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(Config, 'IP_WHITELIST', whitelist)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST', whitelist)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST_ENABLED', True)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST', whitelist)
 
         with flask_app.test_request_context('/', environ_base={'REMOTE_ADDR': '127.0.0.1'}):
             request.user = {'username': 'admin', 'role': 'admin'}
@@ -77,10 +75,8 @@ class TestIpWhitelistRequired:
     def test_whitelist_enabled_ip_not_in_whitelist(self, flask_app, monkeypatch):
         """白名单启用且 IP 不在白名单内时应返回 403"""
         whitelist = {'admin': ['127.0.0.1', '::1']}
-        monkeypatch.setattr(Config, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(Config, 'IP_WHITELIST', whitelist)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST', whitelist)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST_ENABLED', True)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST', whitelist)
 
         with flask_app.test_request_context('/', environ_base={'REMOTE_ADDR': '10.0.0.99'}):
             request.user = {'username': 'admin', 'role': 'admin'}
@@ -97,10 +93,8 @@ class TestIpWhitelistRequired:
     def test_whitelist_enabled_role_not_configured(self, flask_app, monkeypatch):
         """白名单启用但角色不在白名单配置中时应返回 403"""
         whitelist = {'operator': ['127.0.0.1'], 'viewer': ['127.0.0.1']}
-        monkeypatch.setattr(Config, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(Config, 'IP_WHITELIST', whitelist)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST', whitelist)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST_ENABLED', True)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST', whitelist)
 
         with flask_app.test_request_context('/', environ_base={'REMOTE_ADDR': '127.0.0.1'}):
             request.user = {'username': 'admin', 'role': 'admin'}
@@ -117,10 +111,8 @@ class TestIpWhitelistRequired:
     def test_whitelist_enabled_no_user_passes_through(self, flask_app, monkeypatch):
         """白名单启用但用户未认证时应放行（认证由其他中间件处理）"""
         whitelist = {'admin': ['127.0.0.1']}
-        monkeypatch.setattr(Config, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(Config, 'IP_WHITELIST', whitelist)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST', whitelist)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST_ENABLED', True)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST', whitelist)
 
         with flask_app.test_request_context('/', environ_base={'REMOTE_ADDR': '10.0.0.5'}):
             # 不设置 request.user，模拟未认证用户
@@ -138,10 +130,8 @@ class TestIpWhitelistRequired:
     def test_whitelist_ipv6_address(self, flask_app, monkeypatch):
         """白名单应支持 IPv6 地址"""
         whitelist = {'admin': ['::1']}
-        monkeypatch.setattr(Config, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(Config, 'IP_WHITELIST', whitelist)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST_ENABLED', True)
-        monkeypatch.setattr(StaticConfig, 'IP_WHITELIST', whitelist)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST_ENABLED', True)
+        monkeypatch.setattr(config_instance, 'IP_WHITELIST', whitelist)
 
         with flask_app.test_request_context('/', environ_base={'REMOTE_ADDR': '::1'}):
             request.user = {'username': 'admin', 'role': 'admin'}
