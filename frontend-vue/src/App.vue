@@ -378,6 +378,7 @@ export default {
     TwoFactorAuth,
     CronManager,
     Roles,
+    AIAssistant,
     Login
   },
   setup() {
@@ -1531,4 +1532,8 @@ export default {
 
 /* Reduced Motion - 禁用背景光斑动画 */
 @media (prefers-reduced-motion: reduce) {
-  .ios-b
+  .ios-bg-orb {
+    animation: none !important;
+  }
+}
+</style>

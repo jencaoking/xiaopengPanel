@@ -280,7 +280,7 @@
 </template>
 
 <script>
-import { ref, reactive, computed, onMounted, nextTick, watch } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, nextTick } from 'vue'
 import { useStore } from 'vuex'
 
 export default {
@@ -671,12 +671,8 @@ export default {
     })
 
     // 清理定时器
-    const originalUnmounted = onMounted
-    // 使用 onUnmounted
-    import('vue').then(({ onUnmounted }) => {
-      onUnmounted(() => {
-        if (alertTimer) clearInterval(alertTimer)
-      })
+    onUnmounted(() => {
+      if (alertTimer) clearInterval(alertTimer)
     })
 
     return {
