@@ -521,9 +521,13 @@ export default {
   align-items: center;
   margin-bottom: var(--spacing-6);
   padding: var(--spacing-4) var(--spacing-6);
-  background: var(--bg-secondary);
+  background: var(--ios-glass-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-card-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+  transition: var(--ios-theme-transition);
 }
 
 .header-left h2 {
@@ -577,15 +581,20 @@ export default {
 }
 
 .widget {
-  background: var(--bg-secondary);
+  background: var(--ios-card-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border-radius: var(--radius-xl);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-card-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
   overflow: hidden;
-  transition: box-shadow var(--duration-normal) var(--ease-out);
+  transition: box-shadow var(--duration-normal) var(--ease-out),
+              background var(--ios-transition-normal);
 }
 
 .widget:hover {
-  box-shadow: var(--shadow-lg);
+  box-shadow: var(--ios-card-hover-shadow);
+  background: var(--ios-glass-bg-hover);
 }
 
 .widget.editing {

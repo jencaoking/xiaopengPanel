@@ -1,17 +1,21 @@
 /**
- * iOS 26 Design System
- * Apple-inspired modern design language
- * 
- * Features:
- * - Glassmorphism effects
- * - Dynamic color system
- * - Fluid animations
- * - Refined typography
- * - Elegant shadows
+ * xiaopengPanel Design System v2.0
+ * Liquid Glass (Glassmorphism) + Dual Theme (Light/Dark)
+ *
+ * Design Principles:
+ * - Glassmorphism: translucent surfaces, backdrop blur, subtle borders, layered depth
+ * - Dual Theme: full light & dark mode with smooth CSS variable transitions
+ * - Performance: GPU-accelerated transforms only, will-change hints
+ * - Accessibility: WCAG AA contrast, prefers-reduced-motion, focus-visible
+ * - Cross-browser: -webkit- prefixes, @supports fallbacks
  */
 
+/* ========================================
+   1. Core Tokens (theme-independent)
+   ======================================== */
+
 :root {
-  /* iOS 26 Color Palette - Light Mode */
+  /* Brand Colors */
   --ios-blue: #007AFF;
   --ios-green: #34C759;
   --ios-indigo: #5856D6;
@@ -21,54 +25,11 @@
   --ios-red: #FF3B30;
   --ios-teal: #5AC8FA;
   --ios-yellow: #FFCC00;
-  
-  /* iOS 26 Gray Scale */
-  --ios-gray-1: #8E8E93;
-  --ios-gray-2: #AEAEB2;
-  --ios-gray-3: #C7C7CC;
-  --ios-gray-4: #D1D1D6;
-  --ios-gray-5: #E5E5EA;
-  --ios-gray-6: #F2F2F7;
-  
-  /* iOS 26 Semantic Colors - Light */
-  --ios-bg-primary: #FFFFFF;
-  --ios-bg-secondary: #F2F2F7;
-  --ios-bg-tertiary: #FFFFFF;
-  --ios-bg-grouped: #F2F2F7;
-  --ios-bg-grouped-secondary: #FFFFFF;
-  
-  --ios-label-primary: #000000;
-  --ios-label-secondary: rgba(60, 60, 67, 0.6);
-  --ios-label-tertiary: rgba(60, 60, 67, 0.3);
-  --ios-label-quaternary: rgba(60, 60, 67, 0.18);
-  
-  --ios-separator: rgba(60, 60, 67, 0.29);
-  --ios-separator-opaque: #C6C6C8;
-  
-  --ios-fill-primary: rgba(120, 120, 128, 0.2);
-  --ios-fill-secondary: rgba(120, 120, 128, 0.16);
-  --ios-fill-tertiary: rgba(118, 118, 128, 0.12);
-  --ios-fill-quaternary: rgba(116, 116, 128, 0.08);
-  
-  /* Glassmorphism */
-  --ios-glass-bg: rgba(255, 255, 255, 0.72);
-  --ios-glass-border: rgba(255, 255, 255, 0.5);
-  --ios-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
-  --ios-glass-blur: 20px;
-  
-  /* Sidebar Glass */
-  --ios-sidebar-bg: rgba(249, 249, 249, 0.94);
-  --ios-sidebar-border: rgba(0, 0, 0, 0.08);
-  
-  /* Card Styles */
-  --ios-card-bg: rgba(255, 255, 255, 0.8);
-  --ios-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.06);
-  --ios-card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 12px 40px rgba(0, 0, 0, 0.08);
-  
+
   /* Typography - SF Pro Scale */
-  --ios-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif;
-  --ios-font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Cascadia Code', monospace;
-  
+  --ios-font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --ios-font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+
   --ios-text-caption2: 11px;
   --ios-text-caption1: 12px;
   --ios-text-footnote: 13px;
@@ -80,24 +41,24 @@
   --ios-text-title1: 28px;
   --ios-text-large-title: 34px;
   --ios-text-display: 48px;
-  
+
   /* Font Weights */
   --ios-weight-regular: 400;
   --ios-weight-medium: 500;
   --ios-weight-semibold: 600;
   --ios-weight-bold: 700;
-  
+
   /* Line Heights */
   --ios-leading-tight: 1.1;
   --ios-leading-normal: 1.3;
   --ios-leading-relaxed: 1.5;
-  
+
   /* Letter Spacing */
   --ios-tracking-tight: -0.02em;
   --ios-tracking-normal: 0;
   --ios-tracking-wide: 0.02em;
-  
-  /* Spacing Scale */
+
+  /* Spacing Scale (4pt/8dp system) */
   --ios-space-1: 4px;
   --ios-space-2: 8px;
   --ios-space-3: 12px;
@@ -108,8 +69,8 @@
   --ios-space-10: 40px;
   --ios-space-12: 48px;
   --ios-space-16: 64px;
-  
-  /* Border Radius - iOS 26 Style */
+
+  /* Border Radius */
   --ios-radius-xs: 6px;
   --ios-radius-sm: 8px;
   --ios-radius-md: 12px;
@@ -118,36 +79,7 @@
   --ios-radius-2xl: 24px;
   --ios-radius-3xl: 32px;
   --ios-radius-full: 9999px;
-  
-  /* Shadows - Layered iOS Style */
-  --ios-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --ios-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --ios-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --ios-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --ios-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
-  --ios-shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.16);
-  
-  /* Inset Shadows */
-  --ios-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.04);
-  --ios-shadow-inset-deep: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-  
-  /* Transitions - iOS Spring */
-  --ios-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  --ios-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --ios-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
-  --ios-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  
-  --ios-duration-instant: 100ms;
-  --ios-duration-fast: 200ms;
-  --ios-duration-normal: 300ms;
-  --ios-duration-slow: 400ms;
-  --ios-duration-slower: 500ms;
-  
-  --ios-transition-fast: var(--ios-duration-fast) var(--ios-ease-out);
-  --ios-transition-normal: var(--ios-duration-normal) var(--ios-ease-out);
-  --ios-transition-slow: var(--ios-duration-slow) var(--ios-ease-out);
-  --ios-transition-spring: var(--ios-duration-normal) var(--ios-ease-spring);
-  
+
   /* Z-Index Scale */
   --ios-z-base: 0;
   --ios-z-dropdown: 100;
@@ -158,14 +90,42 @@
   --ios-z-popover: 600;
   --ios-z-tooltip: 700;
   --ios-z-toast: 800;
-  
-  /* Component Specific */
+
+  /* Component Dimensions */
   --ios-sidebar-width: 260px;
   --ios-sidebar-collapsed-width: 72px;
   --ios-header-height: 56px;
-  --ios-tabbar-height: 49px;
-  
-  /* Legacy Variable Mapping */
+
+  /* Easing Functions */
+  --ios-ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ios-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ios-ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+  --ios-ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  /* Animation Durations (150-300ms for micro-interactions) */
+  --ios-duration-instant: 100ms;
+  --ios-duration-fast: 200ms;
+  --ios-duration-normal: 300ms;
+  --ios-duration-slow: 400ms;
+  --ios-duration-slower: 500ms;
+
+  /* Transition Shorthand */
+  --ios-transition-fast: var(--ios-duration-fast) var(--ios-ease-out);
+  --ios-transition-normal: var(--ios-duration-normal) var(--ios-ease-out);
+  --ios-transition-slow: var(--ios-duration-slow) var(--ios-ease-out);
+  --ios-transition-spring: var(--ios-duration-normal) var(--ios-ease-spring);
+
+  /* Theme transition for smooth color switching */
+  --ios-theme-transition: background-color var(--ios-duration-normal) var(--ios-ease-out),
+                          color var(--ios-duration-normal) var(--ios-ease-out),
+                          border-color var(--ios-duration-normal) var(--ios-ease-out),
+                          box-shadow var(--ios-duration-normal) var(--ios-ease-out);
+
+  /* Glassmorphism Core Parameters (shared) */
+  --ios-glass-blur: 20px;
+  --ios-glass-saturate: 180%;
+
+  /* Legacy Variable Mapping (backward compatibility) */
   --font-sans: var(--ios-font-family);
   --font-mono: var(--ios-font-mono);
   --font-size-xs: var(--ios-text-caption2);
@@ -196,59 +156,84 @@
   --radius-xl: var(--ios-radius-xl);
   --radius-2xl: var(--ios-radius-2xl);
   --radius-full: var(--ios-radius-full);
-  --shadow-sm: var(--ios-shadow-sm);
-  --shadow-md: var(--ios-shadow-md);
-  --shadow-lg: var(--ios-shadow-lg);
-  --shadow-xl: var(--ios-shadow-xl);
   --duration-fast: var(--ios-duration-fast);
   --duration-normal: var(--ios-duration-normal);
   --duration-slow: var(--ios-duration-slow);
   --ease-out: var(--ios-ease-out);
   --ease-spring: var(--ios-ease-spring);
+  --shadow-sm: var(--ios-shadow-sm);
+  --shadow-md: var(--ios-shadow-md);
+  --shadow-lg: var(--ios-shadow-lg);
+  --shadow-xl: var(--ios-shadow-xl);
 }
 
-/* Dark Mode - iOS 26 */
+/* ========================================
+   2. Dark Theme (default)
+   ======================================== */
+
+:root,
 [data-theme="dark"] {
+  color-scheme: dark;
+
+  /* Semantic Background Colors */
   --ios-bg-primary: #000000;
   --ios-bg-secondary: #1C1C1E;
   --ios-bg-tertiary: #2C2C2E;
   --ios-bg-grouped: #000000;
   --ios-bg-grouped-secondary: #1C1C1E;
-  
+
+  /* Label Colors (WCAG AA compliant) */
   --ios-label-primary: #FFFFFF;
   --ios-label-secondary: rgba(235, 235, 245, 0.6);
   --ios-label-tertiary: rgba(235, 235, 245, 0.3);
   --ios-label-quaternary: rgba(235, 235, 245, 0.18);
-  
+
+  /* Separators */
   --ios-separator: rgba(84, 84, 88, 0.65);
   --ios-separator-opaque: #38383A;
-  
+
+  /* Fill Colors */
   --ios-fill-primary: rgba(120, 120, 128, 0.36);
   --ios-fill-secondary: rgba(120, 120, 128, 0.32);
   --ios-fill-tertiary: rgba(118, 118, 128, 0.24);
   --ios-fill-quaternary: rgba(116, 116, 128, 0.18);
-  
+
+  /* Glassmorphism - Dark Mode */
   --ios-glass-bg: rgba(28, 28, 30, 0.72);
-  --ios-glass-border: rgba(255, 255, 255, 0.1);
+  --ios-glass-bg-hover: rgba(44, 44, 46, 0.8);
+  --ios-glass-border: rgba(255, 255, 255, 0.12);
+  --ios-glass-border-strong: rgba(255, 255, 255, 0.2);
   --ios-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-  
-  --ios-sidebar-bg: rgba(28, 28, 30, 0.94);
+  --ios-glass-highlight: rgba(255, 255, 255, 0.05);
+
+  /* Sidebar Glass */
+  --ios-sidebar-bg: rgba(18, 18, 20, 0.88);
   --ios-sidebar-border: rgba(255, 255, 255, 0.08);
-  
-  --ios-card-bg: rgba(44, 44, 46, 0.8);
+
+  /* Card Glass */
+  --ios-card-bg: rgba(28, 28, 30, 0.72);
   --ios-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 8px 32px rgba(0, 0, 0, 0.3);
   --ios-card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 12px 40px rgba(0, 0, 0, 0.35);
-  
+
+  /* Shadow Scale */
   --ios-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
   --ios-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.25);
   --ios-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.3);
   --ios-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.35);
   --ios-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.4);
   --ios-shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.5);
-}
 
-/* Theme Variable Mapping */
-:root {
+  /* Inset Shadows */
+  --ios-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+
+  /* Dynamic Background Gradient Orbs */
+  --ios-bg-orb-1: rgba(0, 122, 255, 0.12);
+  --ios-bg-orb-2: rgba(175, 82, 222, 0.10);
+  --ios-bg-orb-3: rgba(90, 200, 250, 0.08);
+  --ios-bg-base: #000000;
+
+  /* Legacy theme mapping */
   --bg-primary: var(--ios-bg-primary);
   --bg-secondary: var(--ios-bg-secondary);
   --bg-tertiary: var(--ios-bg-tertiary);
@@ -265,10 +250,98 @@
   --warning-600: var(--ios-orange);
   --danger-500: var(--ios-red);
   --danger-600: var(--ios-red);
+
+  /* Legacy glass variables */
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
 }
 
 /* ========================================
-   Base Reset - iOS 26 Style
+   3. Light Theme
+   ======================================== */
+
+[data-theme="light"] {
+  color-scheme: light;
+
+  /* Semantic Background Colors */
+  --ios-bg-primary: #FFFFFF;
+  --ios-bg-secondary: #F2F2F7;
+  --ios-bg-tertiary: #FFFFFF;
+  --ios-bg-grouped: #F2F2F7;
+  --ios-bg-grouped-secondary: #FFFFFF;
+
+  /* Label Colors (WCAG AA compliant) */
+  --ios-label-primary: #000000;
+  --ios-label-secondary: rgba(60, 60, 67, 0.6);
+  --ios-label-tertiary: rgba(60, 60, 67, 0.3);
+  --ios-label-quaternary: rgba(60, 60, 67, 0.18);
+
+  /* Separators */
+  --ios-separator: rgba(60, 60, 67, 0.29);
+  --ios-separator-opaque: #C6C6C8;
+
+  /* Fill Colors */
+  --ios-fill-primary: rgba(120, 120, 128, 0.2);
+  --ios-fill-secondary: rgba(120, 120, 128, 0.16);
+  --ios-fill-tertiary: rgba(118, 118, 128, 0.12);
+  --ios-fill-quaternary: rgba(116, 116, 128, 0.08);
+
+  /* Glassmorphism - Light Mode */
+  --ios-glass-bg: rgba(255, 255, 255, 0.72);
+  --ios-glass-bg-hover: rgba(255, 255, 255, 0.85);
+  --ios-glass-border: rgba(255, 255, 255, 0.6);
+  --ios-glass-border-strong: rgba(0, 0, 0, 0.12);
+  --ios-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  --ios-glass-highlight: rgba(255, 255, 255, 0.5);
+
+  /* Sidebar Glass */
+  --ios-sidebar-bg: rgba(249, 249, 249, 0.88);
+  --ios-sidebar-border: rgba(0, 0, 0, 0.06);
+
+  /* Card Glass */
+  --ios-card-bg: rgba(255, 255, 255, 0.72);
+  --ios-card-shadow: 0 2px 12px rgba(0, 0, 0, 0.04), 0 8px 32px rgba(0, 0, 0, 0.06);
+  --ios-card-hover-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), 0 12px 40px rgba(0, 0, 0, 0.08);
+
+  /* Shadow Scale */
+  --ios-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ios-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --ios-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --ios-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.1);
+  --ios-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.12);
+  --ios-shadow-2xl: 0 24px 64px rgba(0, 0, 0, 0.16);
+
+  /* Inset Shadows */
+  --ios-shadow-inset: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+  --ios-shadow-inset-deep: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+
+  /* Dynamic Background Gradient Orbs */
+  --ios-bg-orb-1: rgba(0, 122, 255, 0.08);
+  --ios-bg-orb-2: rgba(175, 82, 222, 0.06);
+  --ios-bg-orb-3: rgba(90, 200, 250, 0.05);
+  --ios-bg-base: #F2F2F7;
+
+  /* Legacy theme mapping updated for light */
+  --bg-primary: var(--ios-bg-primary);
+  --bg-secondary: var(--ios-bg-secondary);
+  --bg-tertiary: var(--ios-bg-tertiary);
+  --text-primary: var(--ios-label-primary);
+  --text-secondary: var(--ios-label-secondary);
+  --text-tertiary: var(--ios-label-tertiary);
+  --text-muted: var(--ios-label-quaternary);
+  --border-color: var(--ios-separator);
+
+  /* Legacy glass variables */
+  --glass-bg: var(--ios-glass-bg);
+  --glass-border: var(--ios-glass-border);
+  --glass-shadow: var(--ios-glass-shadow);
+  --glass-backdrop: blur(var(--ios-glass-blur));
+}
+
+/* ========================================
+   4. Base Reset
    ======================================== */
 
 *,
@@ -294,12 +367,14 @@ body {
   line-height: var(--ios-leading-normal);
   letter-spacing: var(--ios-tracking-tight);
   color: var(--ios-label-primary);
-  background-color: var(--ios-bg-primary);
+  background-color: var(--ios-bg-base);
   min-height: 100vh;
-  transition: background-color var(--ios-transition-normal), color var(--ios-transition-normal);
+  overflow-x: hidden;
+  /* Smooth theme transition */
+  transition: var(--ios-theme-transition);
 }
 
-/* Reduced Motion */
+/* Reduced Motion - Accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -352,7 +427,7 @@ body {
 }
 
 /* ========================================
-   Typography - iOS 26 Style
+   5. Typography
    ======================================== */
 
 h1, h2, h3, h4, h5, h6 {
@@ -386,15 +461,24 @@ a:hover {
 }
 
 /* ========================================
-   Glassmorphism Components
+   6. Glassmorphism Component Classes
    ======================================== */
 
+/* Core glass surface - the foundation of liquid glass UI */
 .ios-glass {
   background: var(--ios-glass-bg);
-  backdrop-filter: blur(var(--ios-glass-blur)) saturate(180%);
-  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(180%);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border: 1px solid var(--ios-glass-border);
-  box-shadow: var(--ios-glass-shadow);
+  box-shadow: var(--ios-glass-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(1px)) {
+  .ios-glass,
+  .ios-card {
+    background: var(--ios-bg-secondary);
+  }
 }
 
 .ios-glass-light {
@@ -410,16 +494,17 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Card Component
+   7. Card Component (Liquid Glass)
    ======================================== */
 
 .ios-card {
   background: var(--ios-card-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border-radius: var(--ios-radius-2xl);
   box-shadow: var(--ios-card-shadow);
   border: 1px solid var(--ios-glass-border);
+  /* Top-edge light reflection for glass depth */
   overflow: hidden;
   transition: transform var(--ios-transition-spring), box-shadow var(--ios-transition-normal);
 }
@@ -427,6 +512,7 @@ a:hover {
 .ios-card:hover {
   transform: translateY(-2px);
   box-shadow: var(--ios-card-hover-shadow);
+  background: var(--ios-glass-bg-hover);
 }
 
 .ios-card-header {
@@ -444,7 +530,7 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Button Component
+   8. Button Component
    ======================================== */
 
 .ios-btn {
@@ -465,6 +551,7 @@ a:hover {
   transition: all var(--ios-transition-fast);
   position: relative;
   overflow: hidden;
+  min-height: 44px;
 }
 
 .ios-btn::before {
@@ -480,9 +567,14 @@ a:hover {
   opacity: 0.1;
 }
 
+.ios-btn:active {
+  transform: scale(0.96);
+}
+
 .ios-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
 }
 
 /* Button Variants */
@@ -493,11 +585,15 @@ a:hover {
 
 .ios-btn-primary:hover:not(:disabled) {
   background: #0066d6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
 }
 
 .ios-btn-secondary {
   background: var(--ios-fill-tertiary);
   color: var(--ios-label-primary);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 .ios-btn-secondary:hover:not(:disabled) {
@@ -533,12 +629,14 @@ a:hover {
   padding: var(--ios-space-2) var(--ios-space-4);
   font-size: var(--ios-text-caption1);
   border-radius: var(--ios-radius-md);
+  min-height: 36px;
 }
 
 .ios-btn-lg {
   padding: var(--ios-space-4) var(--ios-space-6);
   font-size: var(--ios-text-body);
   border-radius: var(--ios-radius-xl);
+  min-height: 52px;
 }
 
 .ios-btn-icon {
@@ -547,14 +645,13 @@ a:hover {
   border-radius: var(--ios-radius-full);
 }
 
-/* Capsule Button */
 .ios-btn-capsule {
   border-radius: var(--ios-radius-full);
   padding: var(--ios-space-2) var(--ios-space-5);
 }
 
 /* ========================================
-   iOS 26 Input Component
+   9. Input Component
    ======================================== */
 
 .ios-input-group {
@@ -580,9 +677,10 @@ a:hover {
   font-size: var(--ios-text-body);
   color: var(--ios-label-primary);
   background: var(--ios-fill-quaternary);
-  border: none;
+  border: 1px solid var(--ios-glass-border);
   border-radius: var(--ios-radius-lg);
   transition: all var(--ios-transition-fast);
+  min-height: 44px;
 }
 
 .ios-input:focus,
@@ -590,6 +688,7 @@ a:hover {
 .ios-select:focus {
   outline: none;
   background: var(--ios-fill-tertiary);
+  border-color: var(--ios-blue);
   box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
 }
 
@@ -611,7 +710,6 @@ a:hover {
   padding-right: var(--ios-space-10);
 }
 
-/* iOS Style Search Input */
 .ios-search {
   background: var(--ios-fill-tertiary);
   border-radius: var(--ios-radius-md);
@@ -621,7 +719,7 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Badge Component
+   10. Badge Component
    ======================================== */
 
 .ios-badge {
@@ -639,34 +737,22 @@ a:hover {
   color: var(--ios-label-primary);
 }
 
-.ios-badge-primary {
-  background: var(--ios-blue);
-  color: white;
-}
-
-.ios-badge-success {
-  background: var(--ios-green);
-  color: white;
-}
-
-.ios-badge-warning {
-  background: var(--ios-orange);
-  color: white;
-}
-
-.ios-badge-danger {
-  background: var(--ios-red);
-  color: white;
-}
+.ios-badge-primary { background: var(--ios-blue); color: white; }
+.ios-badge-success { background: var(--ios-green); color: white; }
+.ios-badge-warning { background: var(--ios-orange); color: white; }
+.ios-badge-danger { background: var(--ios-red); color: white; }
 
 /* ========================================
-   iOS 26 List Component
+   11. List Component
    ======================================== */
 
 .ios-list {
   background: var(--ios-card-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border-radius: var(--ios-radius-2xl);
   overflow: hidden;
+  border: 1px solid var(--ios-glass-border);
 }
 
 .ios-list-item {
@@ -724,7 +810,7 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Toggle/Switch Component
+   12. Toggle/Switch Component
    ======================================== */
 
 .ios-toggle {
@@ -770,7 +856,7 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Progress/Loading
+   13. Progress/Loading
    ======================================== */
 
 .ios-progress {
@@ -819,14 +905,15 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Modal Component
+   14. Modal Component (Glass)
    ======================================== */
 
 .ios-modal-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -843,7 +930,10 @@ a:hover {
 }
 
 .ios-modal {
-  background: var(--ios-bg-secondary);
+  background: var(--ios-glass-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
   border-radius: var(--ios-radius-2xl);
   box-shadow: var(--ios-shadow-2xl);
   max-width: 420px;
@@ -889,6 +979,7 @@ a:hover {
   border: none;
   cursor: pointer;
   transition: background var(--ios-transition-fast);
+  min-height: 44px;
 }
 
 .ios-modal-btn:not(:last-child) {
@@ -908,7 +999,7 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Toast/Alert
+   15. Toast/Alert (Glass)
    ======================================== */
 
 .ios-toast {
@@ -917,8 +1008,9 @@ a:hover {
   left: 50%;
   transform: translateX(-50%) translateY(100px);
   background: var(--ios-glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
   padding: var(--ios-space-3) var(--ios-space-5);
   border-radius: var(--ios-radius-full);
   box-shadow: var(--ios-shadow-lg);
@@ -936,7 +1028,7 @@ a:hover {
 }
 
 /* ========================================
-   iOS 26 Tooltip
+   16. Tooltip
    ======================================== */
 
 .ios-tooltip {
@@ -967,7 +1059,73 @@ a:hover {
 }
 
 /* ========================================
-   Utility Classes
+   17. Dynamic Background Orbs (for Glassmorphism depth)
+   ======================================== */
+
+.ios-bg-orbs {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.ios-bg-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(60px);
+  -webkit-filter: blur(60px);
+  opacity: 1;
+  will-change: transform;
+}
+
+.ios-bg-orb-1 {
+  width: 500px;
+  height: 500px;
+  background: var(--ios-bg-orb-1);
+  top: -10%;
+  left: -5%;
+  animation: orbFloat1 20s ease-in-out infinite;
+}
+
+.ios-bg-orb-2 {
+  width: 400px;
+  height: 400px;
+  background: var(--ios-bg-orb-2);
+  top: 30%;
+  right: -5%;
+  animation: orbFloat2 25s ease-in-out infinite;
+}
+
+.ios-bg-orb-3 {
+  width: 450px;
+  height: 450px;
+  background: var(--ios-bg-orb-3);
+  bottom: -10%;
+  left: 30%;
+  animation: orbFloat3 30s ease-in-out infinite;
+}
+
+@keyframes orbFloat1 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(80px, 60px) scale(1.1); }
+  66% { transform: translate(-40px, 100px) scale(0.95); }
+}
+
+@keyframes orbFloat2 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(-60px, 80px) scale(1.05); }
+  66% { transform: translate(40px, -50px) scale(0.9); }
+}
+
+@keyframes orbFloat3 {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(50px, -60px) scale(1.08); }
+  66% { transform: translate(-80px, 40px) scale(0.92); }
+}
+
+/* ========================================
+   18. Utility Classes
    ======================================== */
 
 /* Display */
@@ -1112,6 +1270,13 @@ a:hover {
 .transition-all { transition: all var(--ios-transition-normal) !important; }
 .transition-fast { transition: all var(--ios-transition-fast) !important; }
 .transition-slow { transition: all var(--ios-transition-slow) !important; }
+
+/* GPU Acceleration */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
+}
 
 /* Responsive */
 @media (max-width: 640px) {

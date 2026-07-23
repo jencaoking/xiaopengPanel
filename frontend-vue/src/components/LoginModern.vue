@@ -174,7 +174,8 @@ export default {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  background: var(--ios-bg-grouped);
+  background: var(--ios-bg-base);
+  transition: var(--ios-theme-transition);
 }
 
 .login-background {
@@ -229,9 +230,10 @@ export default {
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   border: 0.5px solid var(--ios-glass-border);
   border-radius: var(--ios-radius-3xl);
-  box-shadow: var(--ios-shadow-2xl);
+  box-shadow: var(--ios-shadow-2xl), inset 0 1px 0 0 var(--ios-glass-highlight);
   padding: var(--ios-space-10);
   animation: ios-slide-up 0.6s var(--ios-ease-spring);
+  transition: var(--ios-theme-transition);
 }
 
 @keyframes ios-slide-up {
@@ -503,13 +505,30 @@ export default {
     padding: var(--ios-space-6);
     border-radius: var(--ios-radius-2xl);
   }
-  
+
   .login-title {
     font-size: var(--ios-text-title1);
   }
-  
+
   .orb-1, .orb-2 {
     display: none;
+  }
+}
+
+/* GPU 加速 */
+.login-card {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .gradient-orb {
+    animation: none !important;
+  }
+
+  .login-card {
+    animation: none !important;
   }
 }
 </style>

@@ -39,6 +39,26 @@ function safeLocalStorageGet(key, defaultValue = null) {
   }
 }
 
+// 初始化主题：优先使用用户保存的偏好，其次检测系统偏好
+function initializeTheme() {
+  const savedTheme = safeLocalStorageGet('theme', null)
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  const theme = savedTheme || (prefersDark ? 'dark' : 'dark') // 默认暗色
+  document.documentElement.setAttribute('data-theme', theme)
+  document.documentElement.style.colorScheme = theme
+  return theme
+}
+
+// 监听系统主题变化（仅当用户未手动设置时跟随）
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+  const savedTheme = safeLocalStorageGet('theme', null)
+  if (!savedTheme) {
+    const theme = e.matches ? 'dark' : 'light'
+    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.style.colorScheme = theme
+  }
+})
+
 // 创建Vuex Store
 const store = createStore({
   state() {
@@ -87,6 +107,7 @@ const store = createStore({
       state.theme = state.theme === 'dark' ? 'light' : 'dark'
       localStorage.setItem('theme', state.theme)
       document.documentElement.setAttribute('data-theme', state.theme)
+      document.documentElement.style.colorScheme = state.theme
     },
     setLanguage(state, language) {
       state.language = language
@@ -167,8 +188,7 @@ const store = createStore({
 })
 
 // 初始化主题
-const initialTheme = localStorage.getItem('theme') || 'dark'
-document.documentElement.setAttribute('data-theme', initialTheme)
+const initialTheme = initializeTheme()
 
 // 创建Vue应用
 const app = createApp(App)

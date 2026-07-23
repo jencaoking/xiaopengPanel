@@ -1,5 +1,12 @@
 <template>
   <div class="app-wrapper">
+    <!-- 动态背景光斑 - 为玻璃态效果提供深度 -->
+    <div class="ios-bg-orbs" aria-hidden="true">
+      <div class="ios-bg-orb ios-bg-orb-1"></div>
+      <div class="ios-bg-orb ios-bg-orb-2"></div>
+      <div class="ios-bg-orb ios-bg-orb-3"></div>
+    </div>
+
     <!-- 登录状态：显示主应用 -->
     <template v-if="isLoggedIn">
       <!-- 移动端遮罩层 -->
@@ -536,28 +543,33 @@ export default {
 </script>
 
 <style scoped>
-/* iOS 26 应用容器 */
+/* 应用容器 - 液态玻璃基础 */
 .app-wrapper {
   min-height: 100vh;
   display: flex;
-  background: var(--ios-bg-grouped);
+  background: var(--ios-bg-base);
+  position: relative;
+  transition: var(--ios-theme-transition);
 }
 
-/* iOS 26 侧边栏 - Glassmorphism */
+/* 侧边栏 - 液态玻璃效果 */
 .app-sidebar {
   width: var(--ios-sidebar-width);
   height: 100vh;
   background: var(--ios-sidebar-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border-right: 0.5px solid var(--ios-sidebar-border);
+  box-shadow: inset -0.5px 0 0 0 var(--ios-glass-highlight);
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
   top: 0;
   z-index: var(--ios-z-fixed);
-  transition: width var(--ios-transition-spring);
+  transition: width var(--ios-transition-spring),
+              background var(--ios-transition-normal),
+              border-color var(--ios-transition-normal);
   overflow: hidden;
 }
 
@@ -683,10 +695,12 @@ export default {
 .nav-item.active {
   background: var(--ios-blue);
   color: white;
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
 }
 
 .nav-item.active:hover {
   background: #0066d6;
+  box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
 }
 
 .nav-icon {
@@ -771,20 +785,22 @@ export default {
   margin-left: var(--ios-sidebar-collapsed-width);
 }
 
-/* iOS 26 顶部导航栏 */
+/* 顶部导航栏 - 液态玻璃 */
 .app-header {
   height: 64px;
   padding: 0 var(--ios-space-6);
   background: var(--ios-glass-bg);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
   border-bottom: 0.5px solid var(--ios-separator);
+  box-shadow: inset 0 -0.5px 0 0 var(--ios-glass-highlight);
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: var(--ios-z-sticky);
+  transition: var(--ios-theme-transition);
 }
 
 .mobile-menu-btn {
@@ -905,7 +921,7 @@ export default {
   color: var(--ios-label-secondary);
 }
 
-/* iOS 26 下拉菜单 */
+/* 下拉菜单 - 液态玻璃 */
 .language-dropdown,
 .user-menu {
   position: relative;
@@ -916,12 +932,15 @@ export default {
   top: calc(100% + var(--ios-space-2));
   right: 0;
   min-width: 200px;
-  background: var(--ios-bg-secondary);
+  background: var(--ios-glass-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 0.5px solid var(--ios-glass-border);
   border-radius: var(--ios-radius-xl);
-  box-shadow: var(--ios-shadow-xl);
+  box-shadow: var(--ios-shadow-xl), inset 0 1px 0 0 var(--ios-glass-highlight);
   padding: var(--ios-space-2);
   z-index: var(--ios-z-dropdown);
-  border: 0.5px solid var(--ios-separator);
+  transition: var(--ios-theme-transition);
 }
 
 .dropdown-item {
@@ -1028,6 +1047,7 @@ export default {
   justify-content: center;
   font-size: var(--ios-text-caption1);
   font-weight: var(--ios-weight-semibold);
+  box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
 }
 
 .user-avatar.large {
@@ -1053,20 +1073,23 @@ export default {
   transform: rotate(180deg);
 }
 
-/* iOS 26 页面内容 */
+/* 页面内容区 */
 .page-content {
   flex: 1;
   padding: var(--ios-space-6);
   overflow-y: auto;
+  position: relative;
+  z-index: 1;
 }
 
-/* iOS 26 移动端遮罩层 */
+/* 移动端遮罩层 - 毛玻璃 */
 .mobile-overlay {
   display: none;
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(4px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: calc(var(--ios-z-fixed) - 1);
   animation: fadeIn var(--ios-duration-fast) var(--ios-ease-out);
 }
@@ -1194,7 +1217,7 @@ export default {
   }
 }
 
-/* iOS 26 滚动条样式 */
+/* 滚动条样式 */
 .sidebar-nav::-webkit-scrollbar {
   width: 4px;
 }
@@ -1223,5 +1246,20 @@ export default {
 
 .page-content::-webkit-scrollbar-thumb:hover {
   background: var(--ios-fill-secondary);
+}
+
+/* GPU加速 - 玻璃态元素性能优化 */
+.app-sidebar,
+.app-header,
+.dropdown-menu {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
+/* Reduced Motion - 禁用背景光斑动画 */
+@media (prefers-reduced-motion: reduce) {
+  .ios-bg-orb {
+    animation: none !important;
+  }
 }
 </style>

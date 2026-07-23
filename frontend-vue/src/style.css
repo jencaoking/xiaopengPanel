@@ -1,227 +1,204 @@
-/* 全局样式重置与基础设置 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
+/**
+ * xiaopengPanel Global Styles v2.0
+ * Liquid Glass (Glassmorphism) + Dual Theme
+ *
+ * This file provides legacy component styles that use the design system
+ * variables defined in design-system.css. All colors, spacing, and effects
+ * reference CSS custom properties for automatic light/dark theme switching.
+ */
+
+/* ========================================
+   Gradient Presets (theme-independent)
+   ======================================== */
 
 :root {
-  /* 颜色变量 - 渐变效果保持一致 */
   --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
   --success-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
   --warning-gradient: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
   --danger-gradient: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
-  
-  /* 背景颜色 - 暗主题默认 */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  
-  /* 玻璃态效果变量 - 暗主题默认 */
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
-  --glass-backdrop: blur(10px);
-  
-  /* 文字颜色 - 暗主题默认 */
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-muted: #94a3b8;
-  
-  /* 边框与圆角 - 保持一致 */
-  --border-radius-sm: 8px;
-  --border-radius-md: 12px;
-  --border-radius-lg: 20px;
-  --border-radius-xl: 30px;
-  
-  /* 过渡动画 - 保持一致 */
-  --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  --transition-liquid: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+
+  --border-radius-sm: var(--ios-radius-sm);
+  --border-radius-md: var(--ios-radius-md);
+  --border-radius-lg: var(--ios-radius-lg);
+  --border-radius-xl: var(--ios-radius-3xl);
+
+  --transition-smooth: all var(--ios-duration-normal) var(--ios-ease-out);
+  --transition-liquid: all var(--ios-duration-slow) var(--ios-ease-spring);
 }
 
-/* 明主题变量 */
-[data-theme="light"] {
-  /* 背景颜色 - 明主题 */
-  --bg-primary: #f8fafc;
-  --bg-secondary: #ffffff;
-  --bg-tertiary: #f1f5f9;
-  
-  /* 玻璃态效果变量 - 明主题 */
-  --glass-bg: rgba(0, 0, 0, 0.05);
-  --glass-border: rgba(0, 0, 0, 0.1);
-  --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  --glass-backdrop: blur(10px);
-  
-  /* 文字颜色 - 明主题 */
-  --text-primary: #1e293b;
-  --text-secondary: #475569;
-  --text-muted: #64748b;
-}
+/* ========================================
+   Glass Effect Core Classes
+   ======================================== */
 
-/* 全局背景与基础样式 */
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-  font-size: 16px;
-  line-height: 1.6;
-  color: var(--text-primary);
-  background: var(--bg-primary);
-  /* 添加渐变背景 */
-  background-image: 
-    radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 40% 80%, rgba(79, 172, 254, 0.1) 0%, transparent 50%);
-  background-attachment: fixed;
-  overflow-x: hidden;
-}
-
-/* 玻璃态效果核心类 */
 .glass {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--border-radius-md);
-  transition: var(--transition-smooth);
+  background: var(--ios-glass-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-glass-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+  border-radius: var(--ios-radius-md);
+  transition: var(--ios-theme-transition);
 }
 
 .glass:hover {
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 12px 40px rgba(31, 38, 135, 0.45);
+  background: var(--ios-glass-bg-hover);
+  box-shadow: var(--ios-card-hover-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
   transform: translateY(-2px);
 }
 
-/* 容器样式 */
+/* ========================================
+   Container
+   ======================================== */
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 20px;
+  padding: 0 var(--ios-space-5);
 }
 
-/* 卡片样式 */
+/* ========================================
+   Card (Legacy glass card)
+   ======================================== */
+
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--border-radius-lg);
-  padding: 24px;
-  margin-bottom: 24px;
-  transition: var(--transition-liquid);
+  background: var(--ios-card-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-card-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+  border-radius: var(--ios-radius-lg);
+  padding: var(--ios-space-6);
+  margin-bottom: var(--ios-space-6);
+  transition: transform var(--ios-transition-spring),
+              box-shadow var(--ios-transition-normal),
+              background var(--ios-transition-normal);
 }
 
 .card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 16px 48px rgba(31, 38, 135, 0.5);
+  box-shadow: var(--ios-card-hover-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+  background: var(--ios-glass-bg-hover);
 }
 
-/* 表格样式 */
+/* ========================================
+   Table
+   ======================================== */
+
 .table-container {
   overflow-x: auto;
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--border-radius-lg);
-  margin-bottom: 24px;
+  background: var(--ios-card-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-card-shadow);
+  border-radius: var(--ios-radius-lg);
+  margin-bottom: var(--ios-space-6);
 }
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  color: var(--text-primary);
+  color: var(--ios-label-primary);
 }
 
 .data-table th,
 .data-table td {
-  padding: 16px 20px;
+  padding: var(--ios-space-4) var(--ios-space-5);
   text-align: left;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  transition: var(--transition-smooth);
+  border-bottom: 0.5px solid var(--ios-separator);
+  transition: var(--ios-theme-transition);
 }
 
 .data-table th {
-  background: rgba(255, 255, 255, 0.05);
-  font-weight: 600;
-  color: var(--text-secondary);
-  font-size: 14px;
+  background: var(--ios-fill-quaternary);
+  font-weight: var(--ios-weight-semibold);
+  color: var(--ios-label-secondary);
+  font-size: var(--ios-text-caption1);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .data-table tr {
-  transition: var(--transition-smooth);
+  transition: background var(--ios-transition-fast);
 }
 
 .data-table tr:hover {
-  background: rgba(255, 255, 255, 0.05);
-  transform: translateX(4px);
+  background: var(--ios-fill-quaternary);
 }
 
-/* 表单样式 */
+/* ========================================
+   Forms (Legacy)
+   ======================================== */
+
 .form-group {
-  margin-bottom: 24px;
+  margin-bottom: var(--ios-space-6);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 10px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  font-size: 14px;
+  margin-bottom: var(--ios-space-2);
+  font-weight: var(--ios-weight-medium);
+  color: var(--ios-label-secondary);
+  font-size: var(--ios-text-caption1);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .form-group input,
 .form-group select,
 .form-group textarea {
   width: 100%;
-  padding: 12px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius-md);
-  font-size: 14px;
-  color: var(--text-primary);
-  transition: var(--transition-smooth);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  padding: var(--ios-space-3) var(--ios-space-4);
+  background: var(--ios-fill-quaternary);
+  border: 1px solid var(--ios-glass-border);
+  border-radius: var(--ios-radius-md);
+  font-size: var(--ios-text-subhead);
+  color: var(--ios-label-primary);
+  transition: all var(--ios-transition-fast);
+  min-height: 44px;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.5);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  border-color: var(--ios-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  background: var(--ios-fill-tertiary);
 }
 
 .form-group input::placeholder,
 .form-group textarea::placeholder {
-  color: var(--text-muted);
+  color: var(--ios-label-tertiary);
 }
 
-/* 按钮样式 */
+/* ========================================
+   Buttons (Legacy)
+   ======================================== */
+
 .btn {
   display: inline-block;
-  padding: 12px 24px;
+  padding: var(--ios-space-3) var(--ios-space-6);
   border: none;
-  border-radius: var(--border-radius-md);
+  border-radius: var(--ios-radius-md);
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--ios-text-subhead);
+  font-weight: var(--ios-weight-semibold);
   text-decoration: none;
   text-align: center;
-  transition: var(--transition-liquid);
+  transition: transform var(--ios-duration-fast) var(--ios-ease-out),
+              box-shadow var(--ios-duration-fast) var(--ios-ease-out),
+              background-color var(--ios-duration-fast) var(--ios-ease-out);
   white-space: nowrap;
   position: relative;
   overflow: hidden;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  min-height: 44px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .btn::before {
@@ -231,8 +208,8 @@ body {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-  transition: var(--transition-smooth);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transition: left var(--ios-duration-slow) var(--ios-ease-out);
 }
 
 .btn:hover::before {
@@ -240,31 +217,35 @@ body {
 }
 
 .btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
 }
 
 .btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: scale(0.96);
 }
 
 .btn-block {
-  display: block;
+  display: flex;
   width: 100%;
 }
 
-/* 渐变按钮样式 */
 .btn-primary {
   background: var(--primary-gradient);
   color: white;
   box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
 }
 
+.btn-primary:hover {
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+}
+
 .btn-secondary {
-  background: var(--glass-bg);
-  color: var(--text-primary);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
+  background: var(--ios-glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: var(--ios-label-primary);
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-shadow-sm);
 }
 
 .btn-success {
@@ -291,31 +272,51 @@ body {
   box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
 }
 
-/* 网格布局 */
+.btn-sm {
+  padding: var(--ios-space-2) var(--ios-space-4);
+  font-size: var(--ios-text-caption1);
+  min-height: 36px;
+}
+
+.btn-xs {
+  padding: var(--ios-space-1) var(--ios-space-3);
+  font-size: var(--ios-text-caption2);
+  min-height: 28px;
+}
+
+/* ========================================
+   Grid Layouts
+   ======================================== */
+
 .grid-2 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  gap: var(--ios-space-6);
 }
 
-/* 统计卡片 */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: var(--ios-space-6);
+  margin-bottom: var(--ios-space-8);
 }
 
+/* ========================================
+   Stat Card (Liquid Glass)
+   ======================================== */
+
 .stat-card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--border-radius-lg);
-  padding: 24px;
+  background: var(--ios-card-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-card-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+  border-radius: var(--ios-radius-lg);
+  padding: var(--ios-space-6);
   text-align: center;
-  transition: var(--transition-liquid);
+  transition: transform var(--ios-transition-spring),
+              box-shadow var(--ios-transition-normal),
+              background var(--ios-transition-normal);
   position: relative;
   overflow: hidden;
 }
@@ -327,65 +328,73 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background: linear-gradient(45deg, transparent, var(--ios-glass-highlight), transparent);
   transform: rotate(45deg);
   animation: liquidFlow 8s linear infinite;
+  pointer-events: none;
 }
 
 @keyframes liquidFlow {
-  0% {
-    transform: translateX(-100%) translateY(-100%) rotate(45deg);
-  }
-  100% {
-    transform: translateX(100%) translateY(100%) rotate(45deg);
-  }
+  0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+  100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+}
+
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--ios-card-hover-shadow);
+  background: var(--ios-glass-bg-hover);
 }
 
 .stat-card h3 {
-  margin: 0 0 12px 0;
-  font-size: 14px;
-  color: var(--text-muted);
-  font-weight: 500;
+  margin: 0 0 var(--ios-space-3) 0;
+  font-size: var(--ios-text-caption1);
+  color: var(--ios-label-secondary);
+  font-weight: var(--ios-weight-medium);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
   position: relative;
   z-index: 1;
 }
 
 .stat-value {
-  font-size: 36px;
-  font-weight: bold;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: var(--ios-text-display);
+  font-weight: var(--ios-weight-bold);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   position: relative;
   z-index: 1;
+  font-variant-numeric: tabular-nums;
 }
 
-/* 系统信息 */
+/* ========================================
+   System Info (Glass)
+   ======================================== */
+
 .system-info {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--border-radius-lg);
-  padding: 24px;
-  margin-bottom: 32px;
+  background: var(--ios-card-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-card-shadow), inset 0 1px 0 0 var(--ios-glass-highlight);
+  border-radius: var(--ios-radius-lg);
+  padding: var(--ios-space-6);
+  margin-bottom: var(--ios-space-8);
+  transition: var(--ios-theme-transition);
 }
 
 .system-info h2 {
-  margin: 0 0 24px 0;
-  font-size: 20px;
-  color: var(--text-primary);
-  font-weight: 600;
+  margin: 0 0 var(--ios-space-6) 0;
+  font-size: var(--ios-text-title3);
+  color: var(--ios-label-primary);
+  font-weight: var(--ios-weight-semibold);
 }
 
 .info-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 24px;
+  gap: var(--ios-space-6);
 }
 
 .info-item {
@@ -396,36 +405,36 @@ body {
 }
 
 .info-item label {
-  font-size: 14px;
-  color: var(--text-muted);
-  margin-bottom: 6px;
+  font-size: var(--ios-text-caption1);
+  color: var(--ios-label-secondary);
+  margin-bottom: var(--ios-space-1);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
 }
 
 .info-item span {
-  font-size: 18px;
-  font-weight: 500;
-  color: var(--text-primary);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: var(--ios-text-subhead);
+  font-weight: var(--ios-weight-medium);
+  color: var(--ios-label-primary);
+  font-variant-numeric: tabular-nums;
 }
 
-/* 区域样式 */
+/* ========================================
+   Section
+   ======================================== */
+
 .section {
-  margin-bottom: 32px;
+  margin-bottom: var(--ios-space-8);
 }
 
 .section h2 {
-  margin: 0 0 24px 0;
-  font-size: 20px;
-  color: var(--text-primary);
-  font-weight: 600;
+  margin: 0 0 var(--ios-space-6) 0;
+  font-size: var(--ios-text-title3);
+  color: var(--ios-label-primary);
+  font-weight: var(--ios-weight-semibold);
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--ios-space-3);
 }
 
 .section h2::before {
@@ -433,36 +442,37 @@ body {
   width: 4px;
   height: 24px;
   background: var(--primary-gradient);
-  border-radius: 2px;
+  border-radius: var(--ios-radius-full);
 }
 
-/* 登录页面 */
+/* ========================================
+   Login Page (Liquid Glass)
+   ======================================== */
+
 .login-container {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: var(--bg-primary);
-  background-image: 
-    radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(118, 75, 162, 0.2) 0%, transparent 50%),
-    radial-gradient(circle at 40% 80%, rgba(79, 172, 254, 0.2) 0%, transparent 50%);
-  background-attachment: fixed;
+  background: var(--ios-bg-base);
+  position: relative;
+  overflow: hidden;
 }
 
 .login-box {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-backdrop);
-  -webkit-backdrop-filter: var(--glass-backdrop);
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--glass-shadow);
-  border-radius: var(--border-radius-xl);
-  padding: 48px;
+  background: var(--ios-glass-bg);
+  backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  -webkit-backdrop-filter: blur(var(--ios-glass-blur)) saturate(var(--ios-glass-saturate));
+  border: 1px solid var(--ios-glass-border);
+  box-shadow: var(--ios-shadow-2xl), inset 0 1px 0 0 var(--ios-glass-highlight);
+  border-radius: var(--ios-radius-3xl);
+  padding: var(--ios-space-12);
   width: 100%;
   max-width: 480px;
-  transition: var(--transition-liquid);
+  transition: var(--ios-theme-transition);
   position: relative;
   overflow: hidden;
+  z-index: 1;
 }
 
 .login-box::before {
@@ -472,110 +482,124 @@ body {
   left: -50%;
   width: 200%;
   height: 200%;
-  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  background: linear-gradient(45deg, transparent, var(--ios-glass-highlight), transparent);
   animation: liquidFlow 10s linear infinite;
+  pointer-events: none;
 }
 
 .login-header {
   text-align: center;
-  margin-bottom: 32px;
+  margin-bottom: var(--ios-space-8);
   position: relative;
   z-index: 1;
 }
 
 .login-header h1 {
-  margin: 0 0 12px 0;
-  font-size: 28px;
-  color: var(--text-primary);
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  margin: 0 0 var(--ios-space-3) 0;
+  font-size: var(--ios-text-title1);
+  color: var(--ios-label-primary);
+  font-weight: var(--ios-weight-bold);
+  background: var(--primary-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
 .subtitle {
-  color: var(--text-muted);
-  font-size: 14px;
+  color: var(--ios-label-secondary);
+  font-size: var(--ios-text-subhead);
 }
 
-/* 错误信息 */
+/* ========================================
+   Error Message
+   ======================================== */
+
 .error-message {
-  color: #fecaca;
-  font-size: 12px;
-  margin-top: 6px;
-  font-weight: 500;
+  color: var(--ios-red);
+  font-size: var(--ios-text-caption1);
+  margin-top: var(--ios-space-1);
+  font-weight: var(--ios-weight-medium);
 }
 
-/* 页面头部 */
+/* ========================================
+   Page Header
+   ======================================== */
+
 .page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  margin-bottom: var(--ios-space-6);
+  padding-bottom: var(--ios-space-4);
+  border-bottom: 0.5px solid var(--ios-separator);
 }
 
 .page-header h2 {
   margin: 0;
-  font-size: 24px;
-  color: var(--text-primary);
-  font-weight: 600;
+  font-size: var(--ios-text-title1);
+  color: var(--ios-label-primary);
+  font-weight: var(--ios-weight-semibold);
 }
 
-/* 搜索框 */
+/* ========================================
+   Search Box (Legacy page-level)
+   ======================================== */
+
 .search-box {
   display: flex;
-  gap: 12px;
+  gap: var(--ios-space-3);
   align-items: center;
 }
 
 .search-box input {
-  padding: 10px 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: var(--border-radius-md);
-  font-size: 14px;
-  color: var(--text-primary);
+  padding: var(--ios-space-2) var(--ios-space-4);
+  background: var(--ios-fill-quaternary);
+  border: 1px solid var(--ios-glass-border);
+  border-radius: var(--ios-radius-md);
+  font-size: var(--ios-text-subhead);
+  color: var(--ios-label-primary);
   width: 320px;
-  transition: var(--transition-smooth);
-  backdrop-filter: blur(5px);
-  -webkit-backdrop-filter: blur(5px);
+  transition: all var(--ios-transition-fast);
+  min-height: 44px;
 }
 
 .search-box input:focus {
   outline: none;
-  border-color: rgba(102, 126, 234, 0.5);
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
+  border-color: var(--ios-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  background: var(--ios-fill-tertiary);
 }
 
-/* 批量操作 */
+/* ========================================
+   Batch Actions
+   ======================================== */
+
 .batch-actions {
   display: flex;
-  gap: 12px;
+  gap: var(--ios-space-3);
 }
 
-/* 加载状态 */
+/* ========================================
+   Loading State
+   ======================================== */
+
 .loading {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 32px;
-  color: var(--text-muted);
+  padding: var(--ios-space-8);
+  color: var(--ios-label-secondary);
 }
 
 .loading::after {
   content: '';
   width: 24px;
   height: 24px;
-  border: 3px solid rgba(255, 255, 255, 0.1);
-  border-top: 3px solid #667eea;
+  border: 3px solid var(--ios-fill-quaternary);
+  border-top: 3px solid var(--ios-blue);
   border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-left: 12px;
+  animation: spin 0.8s linear infinite;
+  margin-left: var(--ios-space-3);
 }
 
 @keyframes spin {
@@ -583,24 +607,26 @@ body {
   100% { transform: rotate(360deg); }
 }
 
-/* 表格样式增强 */
+/* ========================================
+   Table Enhancements
+   ======================================== */
+
 .sortable {
   cursor: pointer;
   user-select: none;
-  transition: var(--transition-smooth);
+  transition: color var(--ios-transition-fast);
 }
 
 .sortable:hover {
-  background: rgba(255, 255, 255, 0.1);
-  color: var(--text-primary);
+  color: var(--ios-label-primary);
 }
 
 .sort-indicator {
   display: inline-block;
-  margin-left: 6px;
-  font-size: 10px;
+  margin-left: var(--ios-space-1);
+  font-size: var(--ios-text-caption2);
   opacity: 0.5;
-  transition: var(--transition-smooth);
+  transition: opacity var(--ios-transition-fast);
 }
 
 .sortable:hover .sort-indicator {
@@ -610,34 +636,20 @@ body {
 .loading-row,
 .no-data {
   text-align: center;
-  padding: 40px 20px;
-  color: var(--text-muted);
+  padding: var(--ios-space-10) var(--ios-space-5);
+  color: var(--ios-label-tertiary);
   font-style: italic;
 }
 
-.loading {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-}
+/* ========================================
+   Responsive Design
+   ======================================== */
 
-/* 按钮尺寸变体 */
-.btn-sm {
-  padding: 8px 16px;
-  font-size: 13px;
-}
-
-.btn-xs {
-  padding: 6px 12px;
-  font-size: 12px;
-}
-
-/* 响应式设计 */
 @media (max-width: 1024px) {
   .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   }
-  
+
   .info-grid {
     grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   }
@@ -647,29 +659,29 @@ body {
   .grid-2 {
     grid-template-columns: 1fr;
   }
-  
+
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .search-box input {
     width: 240px;
   }
-  
+
   .login-box {
-    padding: 32px;
-    margin: 20px;
+    padding: var(--ios-space-8);
+    margin: var(--ios-space-5);
   }
-  
+
   .info-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .batch-actions {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .btn {
     width: 100%;
   }
@@ -679,30 +691,30 @@ body {
   .stats-grid {
     grid-template-columns: 1fr;
   }
-  
+
   .search-box {
     flex-direction: column;
     width: 100%;
   }
-  
+
   .search-box input {
     width: 100%;
   }
-  
+
   .login-box {
-    padding: 24px;
-    margin: 16px;
+    padding: var(--ios-space-6);
+    margin: var(--ios-space-4);
   }
-  
+
   .system-info {
-    padding: 16px;
+    padding: var(--ios-space-4);
   }
-  
+
   .stat-card {
-    padding: 16px;
+    padding: var(--ios-space-4);
   }
-  
+
   .stat-value {
-    font-size: 28px;
+    font-size: var(--ios-text-large-title);
   }
 }
