@@ -552,9 +552,16 @@ class Config:
 # 创建全局配置实例
 config_instance = Config()
 
-# 同步 USERS 为类属性，使 Config.USERS 类访问生效（auth.py / user_manager.py 依赖）
-# 注：USERS 为实例属性，类访问默认会 AttributeError，此处显式暴露类属性
+# 同步【普通实例属性】为类属性，使 Config.XXX 类访问生效
+# 注：USERS / BASE_DIR / CORS_ORIGINS / SECURE_HEADERS 在 __init__ 中以 self.X = ... 赋值（非 @property），
+#     类访问默认会 AttributeError，此处显式暴露为类属性是安全的。
+#     其余 SECRET_KEY / DEBUG / HOST / PORT / LOG_LEVEL / LOG_DIR / IP_WHITELIST* 为 @property，
+#     覆盖类属性会破坏 setter（app.py 动态更新配置 / 测试用例依赖 setter），故不在此同步，
+#     相关调用方应使用 config_instance.XXX 访问。
 Config.USERS = config_instance.USERS
+Config.BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+Config.CORS_ORIGINS = config_instance.CORS_ORIGINS
+Config.SECURE_HEADERS = config_instance.SECURE_HEADERS
 
 # 为了保持向后兼容，提供Config类的静态访问方式
 class StaticConfig:

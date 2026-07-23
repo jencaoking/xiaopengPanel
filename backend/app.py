@@ -10,7 +10,9 @@ from modules.middleware import secure_headers
 from modules.log_manager import log_system, set_request_id, clear_request_id
 
 app = Flask(__name__)
-app.config.from_object(Config)
+# 使用 config_instance 而非 Config 类：SECRET_KEY / DEBUG / HOST / PORT 等为 @property，
+# 类访问只会返回 property 对象而非实际值，必须通过实例访问才能触发 getter。
+app.config.from_object(config_instance)
 
 CORS(app, resources={r"/*": {"origins": Config.CORS_ORIGINS}})
 

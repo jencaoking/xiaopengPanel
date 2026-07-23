@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import request, jsonify
-from config.config import Config
+from config.config import Config, config_instance
 from modules import rbac
 from modules.log_manager import log_system
 
@@ -10,7 +10,8 @@ def ip_whitelist_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
         # 如果IP白名单未启用，直接通过
-        if not Config.IP_WHITELIST_ENABLED:
+        # IP_WHITELIST_ENABLED 为 @property，须通过实例访问
+        if not config_instance.IP_WHITELIST_ENABLED:
             return f(*args, **kwargs)
 
         # 获取客户端IP
@@ -27,14 +28,14 @@ def ip_whitelist_required(f):
         role = user.get('role')
 
         # 检查用户角色是否在白名单配置中
-        if role not in Config.IP_WHITELIST:
+        if role not in config_instance.IP_WHITELIST:
             return jsonify({
                 'status': 'error',
-                'message': 'IP whitelist not configured for this role'
+                'message': 'IP whitelist not configured by this role'
             }), 403
 
         # 检查客户端IP是否在白名单中
-        if client_ip not in Config.IP_WHITELIST[role]:
+        if client_ip not in config_instance.IP_WHITELIST[role]:
             return jsonify({
                 'status': 'error',
                 'message': 'IP address not allowed'

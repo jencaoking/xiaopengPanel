@@ -94,7 +94,8 @@ REFRESH_TOKEN_EXPIRE_TIME = 7 * 24 * 3600  # 7天
 
 # 获取JWT密钥的函数（动态获取，确保配置更新后生效）
 def get_jwt_secret():
-    return Config.SECRET_KEY
+    # SECRET_KEY 为 @property，必须通过实例访问才能拿到真实值
+    return config_instance.SECRET_KEY
 
 # 登录尝试记录
 login_attempts = {}

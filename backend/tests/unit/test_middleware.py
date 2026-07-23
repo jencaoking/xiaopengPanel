@@ -91,7 +91,7 @@ class TestIpWhitelistRequired:
 
             resp = view()
             assert resp[1] == 403
-            assert b'IP address not allowed' in resp[0].response[0].data
+            assert b'IP address not allowed' in resp[0].get_data()
 
     @pytest.mark.unit
     def test_whitelist_enabled_role_not_configured(self, flask_app, monkeypatch):
@@ -111,7 +111,7 @@ class TestIpWhitelistRequired:
 
             resp = view()
             assert resp[1] == 403
-            assert b'not configured for this role' in resp[0].response[0].data
+            assert b'not configured for this role' in resp[0].get_data()
 
     @pytest.mark.unit
     def test_whitelist_enabled_no_user_passes_through(self, flask_app, monkeypatch):
@@ -175,6 +175,7 @@ class TestRequirePermission:
     @pytest.mark.unit
     def test_permission_insufficient_blocks(self, flask_app):
         """权限不足时应返回 403"""
+        import json as _json
         with flask_app.test_request_context('/'):
             # viewer 仅有 *:view 权限
             request.user = {'username': 'viewer', 'role': 'viewer'}
@@ -185,7 +186,9 @@ class TestRequirePermission:
 
             resp = view()
             assert resp[1] == 403
-            assert b'\xe6\x9d\x83\xe9\x99\x90\xe4\xb8\x8d\xe8\xb6\xb3' in resp[0].response[0].data  # "权限不足"
+            body = _json.loads(resp[0].get_data(as_text=True))
+            assert 'message' in body
+            assert '权限不足' in body['message']
 
     @pytest.mark.unit
     def test_permission_without_auth_returns_401(self, flask_app):
@@ -200,7 +203,7 @@ class TestRequirePermission:
 
             resp = view()
             assert resp[1] == 401
-            assert b'Authentication required' in resp[0].response[0].data
+            assert b'Authentication required' in resp[0].get_data()
 
     @pytest.mark.unit
     def test_permission_missing_role_blocks(self, flask_app):
@@ -214,7 +217,7 @@ class TestRequirePermission:
 
             resp = view()
             assert resp[1] == 403
-            assert b'User role not found' in resp[0].response[0].data
+            assert b'User role not found' in resp[0].get_data()
 
     @pytest.mark.unit
     def test_operator_with_matching_permission_allows(self, flask_app):
@@ -269,8 +272,8 @@ class TestRequirePermission:
 
             resp = view()
             assert resp[1] == 403
-            assert b'required_permission' in resp[0].response[0].data
-            assert b'user:delete' in resp[0].response[0].data
+            assert b'required_permission' in resp[0].get_data()
+            assert b'user:delete' in resp[0].get_data()
 
 
 # ==================== 安全响应头 ====================

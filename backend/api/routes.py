@@ -268,7 +268,17 @@ def update_config_route():
 @require_permission('user:view')
 def get_users_route():
     from modules.user_manager import get_all_users
-    return jsonify(get_all_users())
+    users_dict = get_all_users()
+    # 转换为前端期望的数组格式，包含用户名
+    users_list = [
+        {
+            'username': uname,
+            'role': info.get('role', 'viewer'),
+            'status': info.get('status', 'active')
+        }
+        for uname, info in users_dict.items()
+    ]
+    return jsonify({'status': 'success', 'users': users_list})
 
 @api.route('/users', methods=['POST'])
 @authenticate
@@ -303,7 +313,12 @@ def update_user_role_route(username):
 @require_permission('user:delete')
 def delete_user_route(username):
     from modules.user_manager import delete_user
-    return jsonify(delete_user(username))
+    result = delete_user(username)
+    # 兼容 delete_user 返回 (dict, status_code) 元组的情况
+    if isinstance(result, tuple):
+        result, status_code = result
+        return jsonify(result), status_code
+    return jsonify(result)
 
 @api.route('/users/<username>', methods=['GET'])
 @authenticate

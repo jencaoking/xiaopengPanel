@@ -60,8 +60,8 @@ def _verify_terminal_token(token):
         return None
     try:
         import jwt
-        from config.config import Config
-        payload = jwt.decode(token, Config.SECRET_KEY, algorithms=['HS256'])
+        from config.config import config_instance
+        payload = jwt.decode(token, config_instance.SECRET_KEY, algorithms=['HS256'])
         return payload
     except Exception:
         return None
