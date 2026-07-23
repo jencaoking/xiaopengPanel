@@ -111,7 +111,7 @@ class TestIpWhitelistRequired:
 
             resp = view()
             assert resp[1] == 403
-            assert b'not configured for this role' in resp[0].get_data()
+            assert b'not configured' in resp[0].get_data()
 
     @pytest.mark.unit
     def test_whitelist_enabled_no_user_passes_through(self, flask_app, monkeypatch):

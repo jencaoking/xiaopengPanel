@@ -2034,7 +2034,7 @@ def get_alert_thresholds_route():
 @authenticate
 @ip_whitelist_required
 @require_permission('monitor:manage')
-def add_alert_threshold_route():
+def add_system_alert_threshold_route():
     """新增告警阈值"""
     from modules.system_monitor import metrics_collector
     data = request.json or {}

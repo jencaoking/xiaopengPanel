@@ -1,7 +1,31 @@
 import bcrypt
+from flask import request, has_request_context
 from config.config import Config, config_instance
 from modules import rbac
+from modules.auth import check_password_strength
 from modules.log_manager import log_system
+
+
+def _get_current_username():
+    """安全获取当前登录用户名（供自禁用/自删除防护使用）。
+
+    通过 authenticate 装饰器注入的 request.user 获取。
+    在非请求上下文（如测试/脚本）中返回 None，不抛异常。
+    """
+    if not has_request_context():
+        return None
+    user = getattr(request, 'user', None)
+    if not isinstance(user, dict):
+        return None
+    return user.get('username')
+
+
+def _count_active_admins():
+    """统计启用的管理员数量（仅 status == 'active'）。"""
+    return sum(
+        1 for info in Config.USERS.values()
+        if info.get('role') == 'admin' and info.get('status', 'active') == 'active'
+    )
 
 
 # 获取所有用户
@@ -45,13 +69,17 @@ def update_user_status(username, new_status):
             'message': 'Invalid status, must be "active" or "disabled"'
         }
 
-    # 防止禁用最后一个管理员
+    # 防止禁用当前登录用户自身
+    current_user = _get_current_username()
+    if new_status == 'disabled' and current_user is not None and username == current_user:
+        return {
+            'status': 'error',
+            'message': '不能禁用当前登录用户'
+        }
+
+    # 防止禁用最后一个启用的管理员
     if new_status == 'disabled' and Config.USERS[username].get('role') == 'admin':
-        active_admins = sum(
-            1 for u, info in Config.USERS.items()
-            if info.get('role') == 'admin' and info.get('status', 'active') == 'active'
-        )
-        if active_admins <= 1:
+        if _count_active_admins() <= 1:
             return {
                 'status': 'error',
                 'message': '无法禁用最后一个启用的管理员账户'
@@ -90,12 +118,21 @@ def add_user(username, password, role='viewer'):
             'message': f'Invalid role: {role}. Valid roles: {", ".join(rbac.get_valid_role_keys())}'
         }
 
+    # 校验密码强度
+    is_valid, msg = check_password_strength(password)
+    if not is_valid:
+        return {
+            'status': 'error',
+            'message': msg
+        }
+
     # 使用bcrypt哈希密码
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
     Config.USERS[username] = {
         'password': hashed_password.decode('utf-8'),
-        'role': role
+        'role': role,
+        'status': 'active'
     }
 
     # 持久化到 users.json
@@ -117,6 +154,14 @@ def update_user_password(username, new_password):
             'message': f'User {username} not found'
         }
 
+    # 校验密码强度
+    is_valid, msg = check_password_strength(new_password)
+    if not is_valid:
+        return {
+            'status': 'error',
+            'message': msg
+        }
+
     # 使用bcrypt哈希新密码
     hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
     Config.USERS[username]['password'] = hashed_password.decode('utf-8')
@@ -124,6 +169,7 @@ def update_user_password(username, new_password):
     config_instance._save_users(Config.USERS)
     StaticConfigSync()
 
+    log_system(f'User password updated: {username}', 'INFO', 'user')
     return {
         'status': 'success',
         'message': f'Password for user {username} updated successfully'
@@ -146,6 +192,15 @@ def update_user_role(username, new_role):
         }
 
     old_role = Config.USERS[username].get('role')
+
+    # 防止降级最后一个启用的管理员
+    if old_role == 'admin' and new_role != 'admin':
+        if Config.USERS[username].get('status', 'active') == 'active' and _count_active_admins() <= 1:
+            return {
+                'status': 'error',
+                'message': '无法降级最后一个启用的管理员账户'
+            }
+
     Config.USERS[username]['role'] = new_role
 
     config_instance._save_users(Config.USERS)
@@ -166,13 +221,22 @@ def delete_user(username):
             'message': f'User {username} not found'
         }
 
-    # 防止删除最后一个管理员
-    admin_count = sum(1 for info in Config.USERS.values() if info.get('role') == 'admin')
-    if Config.USERS[username].get('role') == 'admin' and admin_count <= 1:
+    # 防止删除当前登录用户自身
+    current_user = _get_current_username()
+    if current_user is not None and username == current_user:
         return {
             'status': 'error',
-            'message': '无法删除最后一个管理员账户'
-        }, 409
+            'message': '不能删除当前登录用户'
+        }
+
+    # 防止删除最后一个启用的管理员（仅统计 status == 'active' 的管理员）
+    if Config.USERS[username].get('role') == 'admin' \
+            and Config.USERS[username].get('status', 'active') == 'active' \
+            and _count_active_admins() <= 1:
+        return {
+            'status': 'error',
+            'message': '无法删除最后一个启用的管理员账户'
+        }
 
     del Config.USERS[username]
     config_instance._save_users(Config.USERS)
