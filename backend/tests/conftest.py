@@ -15,6 +15,7 @@ import time
 import copy
 import bcrypt
 import pytest
+from unittest.mock import MagicMock
 
 # 将项目根目录加入 sys.path，确保 config/modules/api 包可被导入
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -56,15 +57,14 @@ def _setup_test_environment():
 
 @pytest.fixture(scope='session')
 def app():
-    """创建 Flask 测试应用（Mock 掉 cron 调度器和 SocketIO）"""
-    from unittest.mock import patch, MagicMock
+    """创建 Flask 测试应用
 
-    # Mock cron_manager 防止启动调度器
-    with patch('modules.cron_manager.cron_manager.start_scheduler') as _mock_cron, \
-         patch('modules.terminal_manager.init_socketio', return_value=MagicMock()) as _mock_socketio:
-        from app import app as flask_app
-        flask_app.config['TESTING'] = True
-        yield flask_app
+    app.py 已内置 try/except 处理 SocketIO 和 cron 调度器的导入失败，
+    无需额外 Mock。直接导入即可。
+    """
+    from app import app as flask_app
+    flask_app.config['TESTING'] = True
+    yield flask_app
 
 
 @pytest.fixture
@@ -377,18 +377,17 @@ def mock_psutil(monkeypatch):
             'device': '/dev/sda1', 'mountpoint': '/', 'fstype': 'ext4', 'opts': 'rw'
         })()
     ])
-    mock.disk_io_counters = MagicMock(return_value={
-        'sda': type('DiskIO', (), {
-            'read_count': 1000, 'write_count': 500,
-            'read_bytes': 10 * 1024**2, 'write_bytes': 5 * 1024**2,
-            'read_time': 100, 'write_time': 50
-        })()
-    })
+    mock.disk_io_counters = MagicMock(return_value=type('DiskIO', (), {
+        'read_count': 1000, 'write_count': 500,
+        'read_bytes': 10 * 1024**2, 'write_bytes': 5 * 1024**2,
+        'read_time': 100, 'write_time': 50
+    })())
 
     # 网络
     mock.net_io_counters = MagicMock(return_value=type('NetIO', (), {
         'bytes_sent': 1000 * 1024, 'bytes_recv': 2000 * 1024,
-        'packets_sent': 1000, 'packets_recv': 2000
+        'packets_sent': 1000, 'packets_recv': 2000,
+        'errin': 0, 'errout': 0, 'dropin': 0, 'dropout': 0
     })())
     mock.net_connections = MagicMock(return_value=[])
 
@@ -399,7 +398,7 @@ def mock_psutil(monkeypatch):
     mock.boot_time = MagicMock(return_value=time.time() - 86400)
     mock.users = MagicMock(return_value=[])
 
-    monkeypatch.setattr('psutil', mock)
+    monkeypatch.setitem(sys.modules, 'psutil', mock)
     return mock
 
 
